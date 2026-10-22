@@ -19,7 +19,9 @@ import {
   CheckCircle,
   Building2,
   HelpCircle,
-  ChevronRight
+  ChevronRight,
+  Menu,
+  X
 } from 'lucide-react';
 
 interface PublicLandingPageProps {
@@ -29,6 +31,7 @@ interface PublicLandingPageProps {
 export function PublicLandingPage({ onOpenAuth }: PublicLandingPageProps) {
   const { courses, deadlines, virtualLibrary } = useApp();
   const [activeView, setActiveView] = useState<'inicio' | 'biblioteca' | 'regulamento'>('inicio');
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans">
@@ -37,26 +40,29 @@ export function PublicLandingPage({ onOpenAuth }: PublicLandingPageProps) {
 
       {/* Header de Navegação Principal */}
       <header className="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-xs">
-        <div className="max-w-7xl mx-auto px-4 sm:px-8 py-3.5 flex items-center justify-between">
+        <div className="max-w-7xl mx-auto px-4 sm:px-8 py-3 flex items-center justify-between">
           <div
-            onClick={() => setActiveView('inicio')}
-            className="flex items-center gap-3 cursor-pointer select-none"
+            onClick={() => {
+              setActiveView('inicio');
+              setMobileMenuOpen(false);
+            }}
+            className="flex items-center gap-2.5 sm:gap-3 cursor-pointer select-none min-w-0"
           >
-            <div className="w-11 h-11 rounded-xl bg-blue-900 text-white flex items-center justify-center shadow-md">
-              <GraduationCap className="w-6 h-6" />
+            <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-blue-900 text-white flex items-center justify-center shadow-md shrink-0">
+              <GraduationCap className="w-5 h-5 sm:w-6 sm:h-6" />
             </div>
-            <div>
-              <span className="text-base font-extrabold text-slate-900 tracking-tight block leading-tight">
+            <div className="min-w-0">
+              <span className="text-sm sm:text-base font-extrabold text-slate-900 tracking-tight block leading-tight truncate">
                 PORTAL ACADÉMICO DA PAP
               </span>
-              <span className="text-[11px] text-slate-500 font-medium block">
+              <span className="text-[10px] sm:text-[11px] text-slate-500 font-medium block truncate">
                 Sistema de Gestão de Workflow de PAP
               </span>
             </div>
           </div>
 
-          {/* Links e Botões de Entrada */}
-          <nav className="flex items-center gap-3 sm:gap-6">
+          {/* Links e Botões de Entrada Desktop */}
+          <nav className="hidden md:flex items-center gap-4 lg:gap-6">
             <button
               onClick={() => setActiveView('inicio')}
               className={`text-xs font-bold transition-colors cursor-pointer ${activeView === 'inicio' ? 'text-blue-900 border-b-2 border-blue-900 pb-1' : 'text-slate-600 hover:text-slate-900'
@@ -79,7 +85,7 @@ export function PublicLandingPage({ onOpenAuth }: PublicLandingPageProps) {
               Regulamento & Prazos
             </button>
 
-            <div className="h-5 w-px bg-slate-200 hidden sm:block" />
+            <div className="h-5 w-px bg-slate-200" />
 
             <div className="flex items-center gap-2">
               <Link
@@ -99,7 +105,86 @@ export function PublicLandingPage({ onOpenAuth }: PublicLandingPageProps) {
               </Link>
             </div>
           </nav>
+
+          {/* Ações Mobile & Botão Menu Hambúrguer */}
+          <div className="flex items-center gap-2 md:hidden">
+            <Link
+              href="/auth/login"
+              className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-bold text-blue-900 bg-blue-50 hover:bg-blue-100 rounded-lg transition-all border border-blue-200"
+            >
+              <LogIn className="w-3.5 h-3.5" />
+              <span>Entrar</span>
+            </Link>
+
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              aria-label="Abrir menu"
+              className="p-2 text-slate-700 hover:text-blue-900 hover:bg-slate-100 rounded-xl transition-colors cursor-pointer"
+            >
+              {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            </button>
+          </div>
         </div>
+
+        {/* Menu Suspenso Mobile */}
+        {mobileMenuOpen && (
+          <div className="md:hidden border-t border-slate-100 bg-white px-4 py-3.5 space-y-2.5 shadow-lg">
+            <div className="space-y-1">
+              <button
+                onClick={() => {
+                  setActiveView('inicio');
+                  setMobileMenuOpen(false);
+                }}
+                className={`w-full text-left px-3 py-2.5 rounded-xl text-xs font-bold transition-colors ${
+                  activeView === 'inicio' ? 'bg-blue-50 text-blue-900' : 'text-slate-700 hover:bg-slate-50'
+                }`}
+              >
+                Início
+              </button>
+              <button
+                onClick={() => {
+                  setActiveView('biblioteca');
+                  setMobileMenuOpen(false);
+                }}
+                className={`w-full text-left px-3 py-2.5 rounded-xl text-xs font-bold transition-colors ${
+                  activeView === 'biblioteca' ? 'bg-blue-50 text-blue-900' : 'text-slate-700 hover:bg-slate-50'
+                }`}
+              >
+                Biblioteca Virtual
+              </button>
+              <button
+                onClick={() => {
+                  setActiveView('regulamento');
+                  setMobileMenuOpen(false);
+                }}
+                className={`w-full text-left px-3 py-2.5 rounded-xl text-xs font-bold transition-colors ${
+                  activeView === 'regulamento' ? 'bg-blue-50 text-blue-900' : 'text-slate-700 hover:bg-slate-50'
+                }`}
+              >
+                Regulamento & Prazos
+              </button>
+            </div>
+
+            <div className="pt-2 border-t border-slate-100 grid grid-cols-2 gap-2">
+              <Link
+                href="/auth/login"
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex items-center justify-center gap-1.5 py-2.5 text-xs font-bold text-slate-700 bg-slate-50 hover:bg-slate-100 rounded-xl border border-slate-200"
+              >
+                <LogIn className="w-3.5 h-3.5" />
+                <span>Entrar</span>
+              </Link>
+              <Link
+                href="/auth/register"
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex items-center justify-center gap-1.5 py-2.5 text-xs font-bold bg-blue-900 text-white hover:bg-blue-800 rounded-xl shadow-xs"
+              >
+                <UserPlus className="w-3.5 h-3.5" />
+                <span>Criar Conta</span>
+              </Link>
+            </div>
+          </div>
+        )}
       </header>
 
       {/* Conteúdo Dinâmico Público */}
@@ -107,36 +192,31 @@ export function PublicLandingPage({ onOpenAuth }: PublicLandingPageProps) {
         {activeView === 'inicio' && (
           <div>
             {/* Hero Section Institucional */}
-            <section className="bg-gradient-to-b from-slate-900 via-blue-950 to-slate-900 text-white py-16 px-4 sm:px-8 border-b border-slate-800">
-              <div className="max-w-5xl mx-auto text-center space-y-6">
-                <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-500/10 border border-blue-400/30 text-blue-300 text-xs font-semibold">
-                  <ShieldCheck className="w-4 h-4 text-blue-400" />
-                  <span>Plataforma Oficial de Gestão e Homologação de PAP</span>
-                </div>
-
-                <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight text-white max-w-4xl mx-auto leading-tight">
+            <section className="bg-gradient-to-b from-slate-900 via-blue-950 to-slate-900 text-white py-12 sm:py-16 px-4 sm:px-8 border-b border-slate-800">
+              <div className="max-w-5xl mx-auto text-center space-y-5 sm:space-y-6">
+                <h1 className="text-2xl sm:text-4xl md:text-5xl font-extrabold tracking-tight text-white max-w-4xl mx-auto leading-tight">
                   Desmaterialização e Controlo Integral dos Trabalhos de Fim de Curso (PAP)
                 </h1>
 
-                <p className="text-slate-300 text-sm sm:text-base max-w-2xl mx-auto leading-relaxed">
+                <p className="text-slate-300 text-xs sm:text-base max-w-2xl mx-auto leading-relaxed">
                   Sistema centralizado para gestão de candidaturas, acompanhamento de orientações,
                   submissão de PAP, auditoria de originalidade e publicação no repositório institucional.
                 </p>
 
-                <div className="flex flex-wrap items-center justify-center gap-3 pt-4">
+                <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2 sm:pt-4 max-w-md sm:max-w-none mx-auto w-full">
                   <Link
                     href="/auth/register"
-                    className="flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs sm:text-sm font-bold shadow-lg shadow-blue-500/20 transition-all cursor-pointer"
+                    className="w-full sm:w-auto flex items-center justify-center gap-2 px-5 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs sm:text-sm font-bold shadow-lg shadow-blue-500/20 transition-all cursor-pointer text-center"
                   >
                     <span>Registar Nova Candidatura (Estudante/Docente)</span>
-                    <ArrowRight className="w-4 h-4" />
+                    <ArrowRight className="w-4 h-4 shrink-0" />
                   </Link>
 
                   <button
                     onClick={() => setActiveView('biblioteca')}
-                    className="flex items-center gap-2 px-6 py-3 bg-white/10 hover:bg-white/15 text-white rounded-xl text-xs sm:text-sm font-bold border border-white/20 transition-all cursor-pointer"
+                    className="w-full sm:w-auto flex items-center justify-center gap-2 px-5 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs sm:text-sm font-bold shadow-lg shadow-blue-500/20 transition-all cursor-pointer text-center"
                   >
-                    <BookOpen className="w-4 h-4" />
+                    <BookOpen className="w-4 h-4 shrink-0" />
                     <span>Consultar Biblioteca da PAP</span>
                   </button>
                 </div>
@@ -146,9 +226,7 @@ export function PublicLandingPage({ onOpenAuth }: PublicLandingPageProps) {
             {/* Três Áreas Funcionais (Estudante, Docente, Coordenação) */}
             <section className="max-w-7xl mx-auto px-4 sm:px-8 py-16">
               <div className="text-center max-w-2xl mx-auto mb-12">
-                <span className="text-xs font-bold text-blue-900 uppercase tracking-wider block mb-1">
-                  Fluxos Académicos Regulamentares
-                </span>
+                
                 <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
                   Acesso por Perfil Institucional
                 </h2>
@@ -249,7 +327,7 @@ export function PublicLandingPage({ onOpenAuth }: PublicLandingPageProps) {
                       </li>
                       <li className="flex items-start gap-2">
                         <CheckCircle className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
-                        <span>Motor algorítmico de recomendação de júris</span>
+                        <span>Sugestão e composição de mesas de júri</span>
                       </li>
                       <li className="flex items-start gap-2">
                         <CheckCircle className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
@@ -300,7 +378,7 @@ export function PublicLandingPage({ onOpenAuth }: PublicLandingPageProps) {
                           </span>
                         </div>
 
-                        <div className="text-right shrink-0">
+                        <div className="text-left sm:text-right shrink-0 pt-2 sm:pt-0 border-t border-slate-100 sm:border-0">
                           <span className="text-xs text-slate-500 block">Data Limite:</span>
                           <span className="text-sm font-black text-slate-900">
                             {due.toLocaleDateString('pt-PT')} às {due.toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' })}
@@ -347,7 +425,7 @@ export function PublicLandingPage({ onOpenAuth }: PublicLandingPageProps) {
               <div>
                 <h3 className="font-bold text-slate-900 text-sm mb-1">3. Integridade Científica e Prevenção do Plágio</h3>
                 <p>
-                  Todas as submissões são automaticamente submetidas a auditoria algorítmica de similaridade textual. Trabalhos que excedam os índices regulamentares serão devolvidos para correção ou reprovados pela comissão técnica.
+                  Todas as submissões são automaticamente submetidas a auditoria de similaridade textual e originalidade. Trabalhos que excedam os índices regulamentares serão devolvidos para correção ou reprovados pela comissão técnica.
                 </p>
               </div>
 

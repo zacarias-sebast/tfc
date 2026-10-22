@@ -16,7 +16,6 @@ import {
   XCircle,
   Ban,
   RotateCcw,
-  Sparkles,
   AlertTriangle
 } from 'lucide-react';
 
@@ -120,13 +119,13 @@ export function AdminDashboard() {
   return (
     <div className="space-y-6">
       {/* Top Banner / Metrics */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-4 sm:p-6 rounded-2xl sm:rounded-3xl border border-slate-200/80 shadow-xs">
         <div>
           <div className="flex items-center gap-2 text-blue-700 font-bold text-xs uppercase tracking-wider mb-1">
             <ShieldCheck className="w-4 h-4" />
             <span>Administração Geral & Governança do Sistema</span>
           </div>
-          <h2 className="text-2xl font-black text-slate-900 tracking-tight">
+          <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
             Painel Central do Administrador
           </h2>
           <p className="text-xs text-slate-500 mt-1">
@@ -134,17 +133,17 @@ export function AdminDashboard() {
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
           <button
             onClick={() => setIsCourseModalOpen(true)}
-            className="flex items-center gap-2 px-4 py-2.5 bg-blue-900 hover:bg-blue-800 text-white rounded-xl text-xs font-bold transition-all shadow-sm cursor-pointer"
+            className="flex-1 sm:flex-initial justify-center flex items-center gap-2 px-4 py-2.5 bg-blue-900 hover:bg-blue-800 text-white rounded-xl text-xs font-bold transition-all shadow-sm cursor-pointer"
           >
             <Plus className="w-4 h-4" />
             <span>Criar Curso</span>
           </button>
           <button
             onClick={() => setIsCoordModalOpen(true)}
-            className="flex items-center gap-2 px-4 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition-all shadow-sm cursor-pointer"
+            className="flex-1 sm:flex-initial justify-center flex items-center gap-2 px-4 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition-all shadow-sm cursor-pointer"
           >
             <Plus className="w-4 h-4" />
             <span>Novo Coordenador</span>
@@ -215,10 +214,10 @@ export function AdminDashboard() {
       </div>
 
       {/* Tabs */}
-      <div className="flex items-center gap-2 border-b border-slate-200 pb-2">
+      <div className="flex items-center gap-2 border-b border-slate-200 pb-2 overflow-x-auto whitespace-nowrap scrollbar-none">
         <button
           onClick={() => setActiveTab('overview')}
-          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer shrink-0 ${
             activeTab === 'overview'
               ? 'bg-blue-900 text-white shadow-xs'
               : 'text-slate-600 hover:bg-slate-100'
@@ -228,7 +227,7 @@ export function AdminDashboard() {
         </button>
         <button
           onClick={() => setActiveTab('users')}
-          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
+          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer shrink-0 ${
             activeTab === 'users'
               ? 'bg-blue-900 text-white shadow-xs'
               : 'text-slate-600 hover:bg-slate-100'
@@ -243,7 +242,7 @@ export function AdminDashboard() {
         </button>
         <button
           onClick={() => setActiveTab('coordinators')}
-          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer shrink-0 ${
             activeTab === 'coordinators'
               ? 'bg-blue-900 text-white shadow-xs'
               : 'text-slate-600 hover:bg-slate-100'
@@ -571,7 +570,7 @@ export function AdminDashboard() {
             />
           </div>
 
-          <div className="flex justify-end gap-2 pt-3 border-t border-slate-100">
+          <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 pt-3 border-t border-slate-100">
             <button
               type="button"
               onClick={() => setIsCourseModalOpen(false)}
@@ -638,7 +637,7 @@ export function AdminDashboard() {
             </select>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="block font-bold text-slate-700 mb-1">ID / Matrícula Docente</label>
               <input
@@ -666,7 +665,7 @@ export function AdminDashboard() {
             <code>ipuorientacao@gmail.com</code> e senha padrão <code>{coordPassword}</code>.
           </div>
 
-          <div className="flex justify-end gap-2 pt-3 border-t border-slate-100">
+          <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 pt-3 border-t border-slate-100">
             <button
               type="button"
               onClick={() => setIsCoordModalOpen(false)}

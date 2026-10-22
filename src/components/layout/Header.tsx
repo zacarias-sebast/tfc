@@ -42,11 +42,11 @@ export function Header({
   return (
     <header className="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-slate-200/80 px-4 sm:px-6 py-3 flex items-center justify-between transition-all">
       {/* Title & Path */}
-      <div>
-        <h1 className="text-lg sm:text-xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
+      <div className="min-w-0 flex-1 mr-2">
+        <h1 className="text-base sm:text-xl font-bold text-slate-900 tracking-tight flex items-center gap-2 truncate">
           {title}
         </h1>
-        <p className="text-xs text-slate-500 font-medium">
+        <p className="text-xs text-slate-500 font-medium truncate">
           {subtitle} {currentUser?.courseName ? `• ${currentUser.courseName}` : ''}
         </p>
       </div>
@@ -71,7 +71,7 @@ export function Header({
               </button>
 
               {showNotifications && (
-                <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-white rounded-2xl shadow-xl border border-slate-100 p-4 z-50 animate-fade-in">
+                <div className="absolute right-0 mt-2 w-[calc(100vw-2rem)] max-w-sm sm:w-96 bg-white rounded-2xl shadow-xl border border-slate-100 p-4 z-50 animate-fade-in">
                   <div className="flex items-center justify-between pb-3 border-b border-slate-100 mb-3">
                     <div className="flex items-center gap-2">
                       <span className="font-bold text-sm text-slate-800">Notificações</span>

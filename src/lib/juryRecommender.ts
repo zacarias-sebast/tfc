@@ -1,12 +1,7 @@
 import { UserProfile, JuryMember } from '@/types/database';
 
 /**
- * Motor de Recomendação Automática de Bancas de Júri (RF10)
- * Analisa a área de especialização dos professores disponíveis, excluindo o orientador do trabalho,
- * calcula pontuação de afinidade com o tema do TFC e gera a composição sugerida:
- * - Presidente da Banca (doutorado/mestre com maior experiência)
- * - 1º Vogal (especialista direto no domínio temático)
- * - 2º Vogal (especialista metodológico/tecnológico)
+
  */
 export function recommendJuryPanel(
   tfcTheme: string,
@@ -76,7 +71,7 @@ export function recommendJuryPanel(
       professorId: selected[1].professor.id,
       name: selected[1].professor.name,
       role: 'primeiro_vogal',
-      specialization: selected[1].professor.specialization?.join(', ') || 'Inteligência Artificial'
+      specialization: selected[1].professor.specialization?.join(', ') || 'Engenharia de Software'
     },
     {
       professorId: selected[2].professor.id,

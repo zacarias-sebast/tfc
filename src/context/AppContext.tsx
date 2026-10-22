@@ -454,7 +454,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       if (!data.courseId) {
         return { success: false, error: 'É obrigatório selecionar o curso de matrícula.' };
       }
-      if (!data.academicLevel?.includes('Terminal') && !data.academicLevel?.includes('13º Nível')) {
+      if (!data.academicLevel?.includes('Terminal') && !data.academicLevel?.includes('13º Classe')) {
         return { 
           success: false, 
           error: 'Restrição de Nível: O acesso ao fluxo de submissão do TFC é exclusivo para estudantes matriculados no ano terminal (13º nível).' 

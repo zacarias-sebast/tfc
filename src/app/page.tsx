@@ -244,24 +244,43 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col md:flex-row antialiased">
       {/* Mobile Top Header Toggle */}
-      <div className="md:hidden bg-[#0b132b] text-white p-4 flex items-center justify-between border-b border-slate-800">
-        <span className="font-extrabold text-sm tracking-tight">Portal PAP</span>
+      <div className="md:hidden bg-[#0b132b] text-white px-4 py-3 flex items-center justify-between border-b border-slate-800 sticky top-0 z-40">
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center text-white font-bold text-xs shadow-xs">
+            PAP
+          </div>
+          <span className="font-extrabold text-sm tracking-tight">Portal PAP</span>
+        </div>
         <button
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          className="p-1.5 rounded-lg bg-slate-800 text-slate-200"
+          className="p-2 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-200 transition-colors cursor-pointer"
+          aria-label={mobileMenuOpen ? 'Fechar menu' : 'Abrir menu'}
         >
           {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
         </button>
       </div>
 
+      {/* Mobile Backdrop */}
+      {mobileMenuOpen && (
+        <div
+          className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-40 md:hidden animate-fade-in"
+          onClick={() => setMobileMenuOpen(false)}
+        />
+      )}
+
       {/* Sidebar (Desktop + Mobile Drawer) */}
-      <div className={`${mobileMenuOpen ? 'block' : 'hidden'} md:block shrink-0 z-40`}>
+      <div
+        className={`fixed inset-y-0 left-0 z-50 transform ${
+          mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
+        } transition-transform duration-200 ease-in-out md:static md:translate-x-0 shrink-0`}
+      >
         <Sidebar
           currentTab={currentTab}
           onTabChange={(tab) => {
             setCurrentTab(tab);
             setMobileMenuOpen(false);
           }}
+          onCloseMobile={() => setMobileMenuOpen(false)}
           onOpenAuthModal={() => {
             setAuthModalTab('login');
             setIsAuthModalOpen(true);

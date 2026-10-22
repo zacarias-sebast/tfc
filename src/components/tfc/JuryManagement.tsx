@@ -7,7 +7,7 @@ import { StatusBadge } from '@/components/shared/Badge';
 import { Modal } from '@/components/shared/Modal';
 import {
   Award,
-  Sparkles,
+  Users,
   Calendar,
   MapPin,
   CheckCircle,
@@ -114,18 +114,18 @@ export function JuryManagement() {
   return (
     <div className="space-y-6">
       {/* Top Banner */}
-      <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+      <div className="bg-white p-4 sm:p-6 rounded-2xl sm:rounded-3xl border border-slate-200/80 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2 mb-1">
             <span className="text-xs font-bold text-indigo-700 bg-indigo-50 px-2.5 py-0.5 rounded-full border border-indigo-200">
               Bancas Examinadoras de Júri
             </span>
           </div>
-          <h2 className="text-xl font-bold text-slate-800">
+          <h2 className="text-lg sm:text-xl font-bold text-slate-800">
             Composição de Júris, Defesas & Ata de Homologação
           </h2>
           <p className="text-xs text-slate-500 mt-0.5">
-            Sugestão algorítmica de membros por especialidade e publicação automática na Biblioteca Virtual após homologação.
+            Sugestão de membros por especialidade e publicação automática na Biblioteca Virtual após homologação.
           </p>
         </div>
       </div>
@@ -270,8 +270,8 @@ export function JuryManagement() {
                     onClick={() => handleOpenScheduleModal(sub)}
                     className="flex items-center gap-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow-xs transition-colors cursor-pointer shrink-0"
                   >
-                    <Sparkles className="w-3.5 h-3.5" />
-                    <span>Sugerir Júri & Agendar</span>
+                    <Users className="w-3.5 h-3.5" />
+                    <span>Compor Júri & Agendar</span>
                   </button>
                 </div>
               );
@@ -290,11 +290,11 @@ export function JuryManagement() {
       >
         {selectedSubForJury && recommendation && (
           <div className="space-y-4">
-            {/* Explicação da IA/Algoritmo */}
+            {/* Sugestão de Banca */}
             <div className="p-3.5 bg-blue-50/70 border border-blue-200 rounded-2xl flex items-start gap-3 text-xs text-blue-900">
-              <Sparkles className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
+              <Users className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
               <div>
-                <strong className="block font-bold">Motor de Recomendação Inteligente</strong>
+                <strong className="block font-bold">Composição Recomendada da Banca</strong>
                 <p className="text-blue-800 mt-0.5 leading-relaxed">{recommendation.explanation}</p>
               </div>
             </div>
@@ -322,7 +322,7 @@ export function JuryManagement() {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-1">
                   Data e Hora da Defesa:
@@ -351,7 +351,7 @@ export function JuryManagement() {
               </div>
             </div>
 
-            <div className="flex justify-end gap-2 pt-2 border-t border-slate-100">
+            <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 pt-2 border-t border-slate-100">
               <button
                 type="button"
                 onClick={() => setSelectedSubForJury(null)}
@@ -426,7 +426,7 @@ export function JuryManagement() {
               </label>
             </div>
 
-            <div className="flex justify-end gap-2 pt-2 border-t border-slate-100">
+            <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 pt-2 border-t border-slate-100">
               <button
                 type="button"
                 onClick={() => setSelectedJuryForAta(null)}

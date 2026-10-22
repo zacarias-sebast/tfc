@@ -77,18 +77,18 @@ export function ChatModule({ initialGroupId }: ChatModuleProps) {
   };
 
   return (
-    <div className="bg-white rounded-3xl border border-slate-200/80 shadow-xs overflow-hidden flex flex-col h-[750px]">
+    <div className="bg-white rounded-2xl sm:rounded-3xl border border-slate-200/80 shadow-xs overflow-hidden flex flex-col h-[calc(100vh-14rem)] min-h-[480px] max-h-[750px]">
       {/* Top Bar */}
-      <div className="p-4 px-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/60">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-2xl bg-blue-900 text-white flex items-center justify-center font-bold">
-            <MessageSquare className="w-5 h-5" />
+      <div className="p-3 sm:p-4 sm:px-6 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-50/60">
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-blue-900 text-white flex items-center justify-center font-bold shrink-0">
+            <MessageSquare className="w-4 h-4 sm:w-5 sm:h-5" />
           </div>
-          <div>
-            <h3 className="font-bold text-slate-900 text-sm leading-tight">
+          <div className="min-w-0">
+            <h3 className="font-bold text-slate-900 text-xs sm:text-sm leading-tight truncate">
               Canal Oficial de Orientação & Comunicação (RF07)
             </h3>
-            <p className="text-xs text-slate-500">
+            <p className="text-[11px] sm:text-xs text-slate-500 truncate">
               {currentUser.role === 'estudante'
                 ? `Contacto com o orientador: ${currentUser.assignedAdvisorName || 'Corpo Docente'}`
                 : 'Diálogo direto com os grupos de Trabalho de Fim de Curso'}
@@ -100,7 +100,7 @@ export function ChatModule({ initialGroupId }: ChatModuleProps) {
           <select
             value={activeGroupId}
             onChange={(e) => setActiveGroupId(e.target.value)}
-            className="px-3 py-1.5 text-xs rounded-xl border border-slate-200 bg-white font-semibold text-slate-700"
+            className="w-full sm:w-auto px-3 py-1.5 text-xs rounded-xl border border-slate-200 bg-white font-semibold text-slate-700"
           >
             {availableGroups.map((g) => (
               <option key={g.id} value={g.id}>
@@ -112,14 +112,14 @@ export function ChatModule({ initialGroupId }: ChatModuleProps) {
       </div>
 
       {/* Messages Scroll Area */}
-      <div className="flex-1 p-6 overflow-y-auto space-y-4 bg-slate-50/30">
+      <div className="flex-1 p-3 sm:p-6 overflow-y-auto space-y-3 sm:space-y-4 bg-slate-50/30">
         {currentMessages.length === 0 ? (
-          <div className="h-full flex flex-col items-center justify-center text-slate-400">
+          <div className="h-full flex flex-col items-center justify-center text-slate-400 p-4">
             <div className="w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center mb-2">
               <MessageSquare className="w-6 h-6 text-slate-300" />
             </div>
-            <p className="font-bold text-slate-700 text-sm">Nenhuma mensagem neste canal ainda</p>
-            <p className="text-xs text-slate-400 max-w-xs text-center mt-1">
+            <p className="font-bold text-slate-700 text-xs sm:text-sm text-center">Nenhuma mensagem neste canal ainda</p>
+            <p className="text-[11px] sm:text-xs text-slate-400 max-w-xs text-center mt-1">
               Envie uma mensagem ou dúvida sobre metodologia, referências ou cronograma.
             </p>
           </div>
@@ -130,7 +130,7 @@ export function ChatModule({ initialGroupId }: ChatModuleProps) {
             return (
               <div
                 key={msg.id}
-                className={`flex gap-3 max-w-[80%] ${isMe ? 'ml-auto flex-row-reverse' : ''}`}
+                className={`flex gap-2 sm:gap-3 max-w-[90%] sm:max-w-[80%] ${isMe ? 'ml-auto flex-row-reverse' : ''}`}
               >
                 <div
                   className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 font-bold text-xs ${
@@ -194,13 +194,13 @@ export function ChatModule({ initialGroupId }: ChatModuleProps) {
       </div>
 
       {/* Input Field */}
-      <form onSubmit={handleSendMessage} className="p-4 border-t border-slate-200/80 bg-white flex items-center gap-2">
+      <form onSubmit={handleSendMessage} className="p-3 sm:p-4 border-t border-slate-200/80 bg-white flex items-center gap-2">
         <input
           type="text"
-          placeholder="Escreva a sua mensagem para o orientador / grupo..."
+          placeholder="Escreva a sua mensagem..."
           value={inputText}
           onChange={(e) => setInputText(e.target.value)}
-          className="flex-1 px-4 py-3 rounded-2xl border border-slate-200 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-800"
+          className="flex-1 px-3.5 sm:px-4 py-2.5 sm:py-3 rounded-2xl border border-slate-200 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-800"
         />
 
         <button

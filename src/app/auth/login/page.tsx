@@ -65,14 +65,14 @@ export default function LoginPage() {
           href="/"
           className="flex items-center gap-3 text-slate-900 group cursor-pointer select-none"
         >
-          <div className="w-11 h-11 rounded-xl bg-blue-900 text-white flex items-center justify-center shadow-md">
-            <GraduationCap className="w-6 h-6" />
+          <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-xl bg-blue-900 text-white flex items-center justify-center shadow-md shrink-0">
+            <GraduationCap className="w-5 h-5 sm:w-6 sm:h-6" />
           </div>
-          <div>
-            <span className="text-base font-extrabold text-slate-900 tracking-tight block leading-tight">
+          <div className="min-w-0">
+            <span className="text-sm sm:text-base font-extrabold text-slate-900 tracking-tight block leading-tight truncate">
               PORTAL ACADÉMICO DA PAP
             </span>
-            <span className="text-[11px] text-slate-500 font-medium block">
+            <span className="text-[10px] sm:text-[11px] text-slate-500 font-medium block truncate">
               Sistema de Gestão de Workflow de Trabalhos da PAP
             </span>
           </div>
@@ -80,25 +80,25 @@ export default function LoginPage() {
 
         <Link
           href="/"
-          className="flex items-center gap-1.5 text-xs font-bold text-slate-700 hover:text-blue-900 hover:bg-slate-100 transition-colors cursor-pointer px-3.5 py-2 rounded-xl border border-slate-200"
+          className="flex items-center gap-1.5 text-xs font-bold text-slate-700 hover:text-blue-900 hover:bg-slate-100 transition-colors cursor-pointer px-2.5 sm:px-3.5 py-2 rounded-xl border border-slate-200 shrink-0"
         >
           <ArrowLeft className="w-3.5 h-3.5" />
-          <span>Voltar ao Início</span>
+          <span><span className="hidden sm:inline">Voltar ao Início</span><span className="sm:hidden">Voltar</span></span>
         </Link>
       </header>
 
    
-      <main className="flex-1 flex items-center justify-center p-4 sm:p-6 lg:p-8">
-        <div className="w-full max-w-md space-y-6">
+      <main className="flex-1 flex items-center justify-center p-3 sm:p-6 lg:p-8">
+        <div className="w-full max-w-md space-y-4 sm:space-y-6">
           {/* Card Principal de Autenticação */}
-          <div className="bg-white border border-slate-200/90 rounded-3xl p-6 sm:p-8 shadow-xl shadow-slate-200/60 relative overflow-hidden">
+          <div className="bg-white border border-slate-200/90 rounded-2xl sm:rounded-3xl p-5 sm:p-8 shadow-xl shadow-slate-200/60 relative overflow-hidden">
             <div className="absolute top-0 left-0 right-0 h-1.5 bg-blue-900" />
 
             <div className="text-center space-y-2 mb-6">
               <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-blue-50 border border-blue-200 text-blue-900 mb-2 shadow-xs">
                 <ShieldCheck className="w-6 h-6" />
               </div>
-              <h1 className="text-2xl font-black text-slate-900 tracking-tight">
+              <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
                 Acesso ao Portal
               </h1>
               <p className="text-xs text-slate-500 max-w-xs mx-auto">

@@ -19,7 +19,7 @@ export const INITIAL_COURSES: Course[] = [
     coordinatorId: 'usr-coord-1',
     coordinatorName: 'Prof.ª Dra. Teresa Bento',
     terminalLevel: '13º Nível (Terminal)',
-    description: 'Curso com foco em Engenharia de Software, Inteligência Artificial, Redes e Sistemas Distribuídos.',
+    description: 'Curso com foco em Engenharia de Software, Redes e Sistemas Distribuídos.',
     isActive: true,
     createdAt: '2025-01-10T08:00:00Z',
   },

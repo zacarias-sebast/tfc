@@ -17,7 +17,8 @@ import {
   UserPlus,
   BookMarked,
   LogOut,
-  User
+  User,
+  X
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -25,9 +26,10 @@ interface SidebarProps {
   onTabChange: (tab: string) => void;
   onOpenAuthModal?: () => void;
   onOpenProfileModal?: () => void;
+  onCloseMobile?: () => void;
 }
 
-export function Sidebar({ currentTab, onTabChange, onOpenAuthModal, onOpenProfileModal }: SidebarProps) {
+export function Sidebar({ currentTab, onTabChange, onOpenAuthModal, onOpenProfileModal, onCloseMobile }: SidebarProps) {
   const { currentUser, users, submissions, logout } = useApp();
 
   if (!currentUser) return null;
@@ -113,20 +115,31 @@ export function Sidebar({ currentTab, onTabChange, onOpenAuthModal, onOpenProfil
   const filteredNav = navItems.filter((item) => item.roles.includes(role));
 
   return (
-    <aside className="w-64 sidebar-navy text-slate-100 flex flex-col shrink-0 min-h-screen border-r border-slate-800 shadow-2xl">
+    <aside className="w-64 max-w-[85vw] sidebar-navy text-slate-100 flex flex-col shrink-0 h-full min-h-screen border-r border-slate-800 shadow-2xl">
       {/* Brand Header */}
-      <div className="p-5 border-b border-slate-800/80 flex items-center gap-3">
-        <div className="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center text-white shadow-lg shadow-blue-500/30">
-          <GraduationCap className="w-6 h-6" />
+      <div className="p-4 sm:p-5 border-b border-slate-800/80 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center text-white shadow-lg shadow-blue-500/30 shrink-0">
+            <GraduationCap className="w-6 h-6" />
+          </div>
+          <div>
+            <span className="font-extrabold text-base tracking-tight text-white block">
+              Portal PAP
+            </span>
+            <span className="text-[10px] text-blue-300 font-medium block">
+              Gestão de Workflow de PAP
+            </span>
+          </div>
         </div>
-        <div>
-          <span className="font-extrabold text-base tracking-tight text-white block">
-            Portal PAP
-          </span>
-          <span className="text-[10px] text-blue-300 font-medium block">
-            Gestão de Workflow de PAP
-          </span>
-        </div>
+        {onCloseMobile && (
+          <button
+            onClick={onCloseMobile}
+            className="md:hidden p-1.5 rounded-xl bg-slate-800/80 text-slate-300 hover:text-white transition-colors cursor-pointer"
+            aria-label="Fechar navegação"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        )}
       </div>
 
       {/* Role Pill Banner */}

@@ -8,7 +8,6 @@ import {
   LogIn,
   UserPlus,
   GraduationCap,
-  Sparkles,
   ShieldAlert,
   CheckCircle,
   AlertTriangle,

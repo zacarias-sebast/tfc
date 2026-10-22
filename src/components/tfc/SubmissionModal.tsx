@@ -10,7 +10,6 @@ import {
   AlertCircle,
   CheckCircle2,
   Lock,
-  Sparkles,
   ShieldCheck,
   X
 } from 'lucide-react';
@@ -157,7 +156,7 @@ export function SubmissionModal({ isOpen, onClose }: SubmissionModalProps) {
             <input
               type="text"
               required
-              placeholder="Ex: Inteligência Artificial e Processamento de Linguagem Natural"
+              placeholder="Ex: Engenharia de Software e Sistemas Distribuídos"
               value={theme}
               onChange={(e) => setTheme(e.target.value)}
               className="w-full px-3 py-2 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 text-slate-800"
@@ -169,7 +168,7 @@ export function SubmissionModal({ isOpen, onClose }: SubmissionModalProps) {
             <input
               type="text"
               required
-              placeholder="Ex: Sistema Inteligente de Apoio à Tomada de Decisão Médica Hospitalar"
+              placeholder="Ex: Sistema Integrado de Gestão Hospitalar e Atendimento Clínico"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               className="w-full px-3 py-2 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 text-slate-800"
@@ -227,22 +226,22 @@ export function SubmissionModal({ isOpen, onClose }: SubmissionModalProps) {
         <div className="p-3 bg-blue-50/60 rounded-2xl border border-blue-100 flex items-start gap-2.5 text-blue-900 text-[11px]">
           <ShieldCheck className="w-4 h-4 text-blue-700 shrink-0 mt-0.5" />
           <p>
-            <strong>Auditoria de Integridade Académica (RF09):</strong> Ao submeter, o seu documento será submetido à verificação algorítmica de plágio contra a base de dados interna de monografias e publicações científicas.
+            <strong>Auditoria de Integridade Académica (RF09):</strong> Ao submeter, o seu documento será submetido à verificação de plágio e similaridade textual contra a base de dados interna de monografias e publicações científicas.
           </p>
         </div>
 
-        <div className="flex justify-end gap-2 pt-3 border-t border-slate-100">
+        <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 pt-3 border-t border-slate-100">
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold cursor-pointer"
+            className="w-full sm:w-auto px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold cursor-pointer text-center"
           >
             Cancelar
           </button>
           <button
             type="submit"
             disabled={loading || !stagePermission.allowed}
-            className="px-5 py-2.5 bg-blue-900 hover:bg-blue-800 disabled:opacity-50 text-white rounded-xl font-bold cursor-pointer flex items-center gap-2 shadow-xs"
+            className="w-full sm:w-auto px-5 py-2.5 bg-blue-900 hover:bg-blue-800 disabled:opacity-50 text-white rounded-xl font-bold cursor-pointer flex items-center justify-center gap-2 shadow-xs"
           >
             {loading ? (
               <>

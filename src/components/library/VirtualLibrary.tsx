@@ -13,7 +13,6 @@ import {
   Calendar,
   User,
   Award,
-  Sparkles,
   FileText,
   CheckCircle,
   Eye
@@ -60,73 +59,75 @@ export function VirtualLibrary() {
   return (
     <div className="space-y-6">
       {/* Banner */}
-      <div className="bg-gradient-to-r from-blue-900 via-indigo-950 to-slate-900 rounded-3xl p-8 text-white shadow-xl relative overflow-hidden">
+      <div className="bg-gradient-to-r from-blue-900 via-indigo-950 to-slate-900 rounded-2xl sm:rounded-3xl p-5 sm:p-8 text-white shadow-xl relative overflow-hidden">
         <div className="relative z-10 max-w-2xl">
           <div className="inline-flex items-center gap-2 bg-blue-500/20 text-blue-200 px-3 py-1 rounded-full text-xs font-semibold mb-3 border border-blue-400/30">
             <BookOpen className="w-3.5 h-3.5" />
-            <span>Repositório Institucional de PAP Homologados </span>
+            <span>Repositório Institucional de PAP Homologados</span>
           </div>
-          <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight mb-2">
+          <h2 className="text-xl sm:text-3xl font-extrabold tracking-tight mb-2">
             Biblioteca Virtual Académica
           </h2>
-          <p className="text-blue-200 text-xs sm:text-sm leading-relaxed mb-6">
+          <p className="text-blue-200 text-xs sm:text-sm leading-relaxed mb-5 sm:mb-6">
             Acesso público e centralizado às monografias e trabalhos de fim de curso defendidos e aprovados perante bancas examinadoras.
           </p>
 
           {/* Search Bar */}
           <div className="relative w-full">
-            <Search className="w-5 h-5 text-slate-400 absolute left-4 top-3.5" />
+            <Search className="w-4 h-4 sm:w-5 sm:h-5 text-slate-400 absolute left-3.5 sm:left-4 top-3 sm:top-3.5" />
             <input
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Pesquise por título, autor, tema, orientador ou palavras-chave..."
-              className="w-full pl-12 pr-4 py-3 bg-white text-slate-800 rounded-2xl text-xs sm:text-sm font-medium shadow-lg focus:outline-blue-500 placeholder:text-slate-400"
+              placeholder="Pesquise por título, autor, tema, orientador..."
+              className="w-full pl-10 sm:pl-12 pr-4 py-2.5 sm:py-3 bg-white text-slate-800 rounded-xl sm:rounded-2xl text-xs sm:text-sm font-medium shadow-lg focus:outline-blue-500 placeholder:text-slate-400"
             />
           </div>
         </div>
 
         <div className="absolute right-0 bottom-0 opacity-10 pointer-events-none translate-x-10 translate-y-10">
-          <BookOpen className="w-96 h-96 text-white" />
+          <BookOpen className="w-72 sm:w-96 h-72 sm:h-96 text-white" />
         </div>
       </div>
 
       {/* Filter Row */}
-      <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs flex flex-wrap items-center justify-between gap-4">
-        <div className="flex flex-wrap items-center gap-3">
+      <div className="bg-white p-3.5 sm:p-4 rounded-2xl border border-slate-200/80 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 w-full sm:w-auto">
           <div className="flex items-center gap-2 text-xs font-bold text-slate-500">
             <Filter className="w-4 h-4" />
             <span>Filtros:</span>
           </div>
 
-          <select
-            value={selectedCourse}
-            onChange={(e) => setSelectedCourse(e.target.value)}
-            className="p-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 focus:outline-blue-500"
-          >
-            <option value="todos">Todos os Cursos</option>
-            {courses.map((c) => (
-              <option key={c.id} value={c.name}>
-                {c.name}
-              </option>
-            ))}
-          </select>
+          <div className="grid grid-cols-2 sm:flex items-center gap-2">
+            <select
+              value={selectedCourse}
+              onChange={(e) => setSelectedCourse(e.target.value)}
+              className="w-full sm:w-auto p-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 focus:outline-blue-500"
+            >
+              <option value="todos">Todos os Cursos</option>
+              {courses.map((c) => (
+                <option key={c.id} value={c.name}>
+                  {c.name}
+                </option>
+              ))}
+            </select>
 
-          <select
-            value={selectedYear}
-            onChange={(e) => setSelectedYear(e.target.value)}
-            className="p-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 focus:outline-blue-500"
-          >
-            <option value="todos">Todos os Anos</option>
-            {availableYears.map((yr) => (
-              <option key={yr} value={yr.toString()}>
-                Ano {yr}
-              </option>
-            ))}
-          </select>
+            <select
+              value={selectedYear}
+              onChange={(e) => setSelectedYear(e.target.value)}
+              className="w-full sm:w-auto p-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 focus:outline-blue-500"
+            >
+              <option value="todos">Todos os Anos</option>
+              {availableYears.map((yr) => (
+                <option key={yr} value={yr.toString()}>
+                  Ano {yr}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
 
-        <div className="text-xs font-bold text-slate-500">
+        <div className="text-xs font-bold text-slate-500 text-left sm:text-right">
           {filteredItems.length} trabalhos homologados indexados
         </div>
       </div>

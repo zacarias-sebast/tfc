@@ -335,7 +335,7 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                   type="text"
                   value={specialization}
                   onChange={(e) => setSpecialization(e.target.value)}
-                  placeholder="Ex: Redes, Inteligência Artificial, Segurança"
+                  placeholder="Ex: Redes de Computadores, Engenharia de Software, Cibersegurança"
                   className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs focus:outline-hidden focus:border-blue-900 focus:ring-1 focus:ring-blue-900"
                 />
               </div>
@@ -410,11 +410,11 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
         </div>
 
         {/* Botões de Ação */}
-        <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
+        <div className="flex flex-col-reverse sm:flex-row sm:items-center justify-end gap-2 pt-3 border-t border-slate-100">
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl transition-colors cursor-pointer"
+            className="w-full sm:w-auto px-4 py-2.5 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl transition-colors cursor-pointer text-center"
           >
             Cancelar
           </button>
@@ -422,7 +422,7 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
           <button
             type="submit"
             disabled={loading}
-            className="px-5 py-2 bg-blue-900 hover:bg-blue-800 disabled:opacity-50 text-white rounded-xl text-xs font-bold shadow-md shadow-blue-900/20 transition-all cursor-pointer flex items-center gap-2"
+            className="w-full sm:w-auto px-5 py-2.5 bg-blue-900 hover:bg-blue-800 disabled:opacity-50 text-white rounded-xl text-xs font-bold shadow-md shadow-blue-900/20 transition-all cursor-pointer flex items-center justify-center gap-2"
           >
             <Save className="w-4 h-4" />
             <span>{loading ? 'A guardar no Supabase...' : 'Guardar Alterações'}</span>

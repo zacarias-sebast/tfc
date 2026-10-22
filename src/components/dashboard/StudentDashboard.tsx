@@ -75,13 +75,13 @@ export function StudentDashboard({ onNavigate, onOpenSubmitModal }: StudentDashb
   return (
     <div className="space-y-6">
       {/* Student Welcome Header */}
-      <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-6">
+      <div className="bg-white p-4 sm:p-6 rounded-2xl sm:rounded-3xl border border-slate-200/80 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4 sm:gap-6">
         <div>
           <div className="flex items-center gap-2 text-blue-700 font-bold text-xs uppercase tracking-wider mb-1">
             <FileCheck2 className="w-4 h-4" />
             <span>Portal do Estudante Finalista</span>
           </div>
-          <h2 className="text-2xl font-black text-slate-900 tracking-tight">
+          <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
             Olá, {currentUser.name}
           </h2>
           <p className="text-xs text-slate-500 mt-1">
@@ -90,7 +90,7 @@ export function StudentDashboard({ onNavigate, onOpenSubmitModal }: StudentDashb
         </div>
 
         {/* Advisor card */}
-        <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200/70 flex items-center justify-between gap-4">
+        <div className="bg-slate-50 p-3.5 sm:p-4 rounded-xl sm:rounded-2xl border border-slate-200/70 flex items-center justify-between gap-4 w-full md:w-auto">
           <div>
             <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
               Orientador Designado:
@@ -101,7 +101,7 @@ export function StudentDashboard({ onNavigate, onOpenSubmitModal }: StudentDashb
           </div>
           <button
             onClick={() => onNavigate('chat')}
-            className="px-3 py-1.5 bg-blue-900 hover:bg-blue-800 text-white rounded-xl text-xs font-bold transition-all shadow-xs cursor-pointer flex items-center gap-1.5"
+            className="px-3 py-1.5 bg-blue-900 hover:bg-blue-800 text-white rounded-xl text-xs font-bold transition-all shadow-xs cursor-pointer flex items-center gap-1.5 shrink-0"
           >
             <MessageSquare className="w-3.5 h-3.5" />
             <span>Chat</span>
@@ -110,8 +110,8 @@ export function StudentDashboard({ onNavigate, onOpenSubmitModal }: StudentDashb
       </div>
 
       {/* TFC Timeline / Progression */}
-      <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs">
-        <h3 className="text-sm font-bold text-slate-800 mb-4 uppercase tracking-wider text-xs">
+      <div className="bg-white p-4 sm:p-6 rounded-2xl sm:rounded-3xl border border-slate-200/80 shadow-xs">
+        <h3 className="text-xs sm:text-sm font-bold text-slate-800 mb-4 uppercase tracking-wider">
           Etapas do Trabalho de Fim de Curso (PAP)
         </h3>
 
@@ -161,13 +161,13 @@ export function StudentDashboard({ onNavigate, onOpenSubmitModal }: StudentDashb
       </div>
 
       {/* Submission CTA & Deadlines Banner */}
-      <div className="bg-gradient-to-r from-blue-900 to-indigo-900 text-white p-6 rounded-3xl shadow-lg flex flex-col md:flex-row md:items-center justify-between gap-6">
+      <div className="bg-gradient-to-r from-blue-900 to-indigo-900 text-white p-5 sm:p-7 rounded-2xl sm:rounded-3xl shadow-lg flex flex-col md:flex-row md:items-center justify-between gap-5 sm:gap-6">
         <div className="space-y-1">
           <div className="flex items-center gap-2 text-blue-200 text-xs font-bold uppercase tracking-wider">
             <UploadCloud className="w-4 h-4" />
             <span>Envio de Documento / Relatório da PAP</span>
           </div>
-          <h3 className="text-xl font-black tracking-tight">
+          <h3 className="text-lg sm:text-xl font-black tracking-tight">
             Pronto para submeter a próxima versão do seu PAP?
           </h3>
           <p className="text-xs text-blue-100/80 max-w-xl">
@@ -185,7 +185,7 @@ export function StudentDashboard({ onNavigate, onOpenSubmitModal }: StudentDashb
         <button
           onClick={onOpenSubmitModal}
           disabled={!stagePermission.allowed}
-          className={`px-6 py-3 rounded-2xl font-black text-sm flex items-center gap-2 transition-all shrink-0 cursor-pointer ${
+          className={`w-full sm:w-auto justify-center px-6 py-3 rounded-2xl font-black text-sm flex items-center gap-2 transition-all shrink-0 cursor-pointer ${
             stagePermission.allowed
               ? 'bg-white text-blue-950 hover:bg-blue-50 shadow-md hover:scale-102'
               : 'bg-white/20 text-white/50 cursor-not-allowed'
@@ -198,7 +198,7 @@ export function StudentDashboard({ onNavigate, onOpenSubmitModal }: StudentDashb
 
       {/* Defense / Jury Scheduled Card */}
       {myJury && (
-        <div className="bg-emerald-50 border border-emerald-200 rounded-3xl p-6 shadow-xs">
+        <div className="bg-emerald-50 border border-emerald-200 rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-xs">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2 text-emerald-800 font-black text-xs uppercase tracking-wider">
               <Award className="w-4 h-4 text-emerald-600" />
@@ -207,9 +207,9 @@ export function StudentDashboard({ onNavigate, onOpenSubmitModal }: StudentDashb
             <StatusBadge status={myJury.status} />
           </div>
 
-          <h3 className="text-lg font-bold text-slate-900">{myJury.tfcTitle}</h3>
+          <h3 className="text-base sm:text-lg font-bold text-slate-900">{myJury.tfcTitle}</h3>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4 text-xs">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mt-4 text-xs">
             <div className="bg-white p-3 rounded-xl border border-emerald-100">
               <span className="text-slate-400 block font-semibold">Data da Defesa:</span>
               <span className="font-extrabold text-slate-800 text-sm">
@@ -231,16 +231,16 @@ export function StudentDashboard({ onNavigate, onOpenSubmitModal }: StudentDashb
       )}
 
       {/* Submissions History */}
-      <div className="bg-white rounded-3xl border border-slate-200/80 shadow-xs overflow-hidden">
-        <div className="p-5 border-b border-slate-100 flex items-center justify-between">
+      <div className="bg-white rounded-2xl sm:rounded-3xl border border-slate-200/80 shadow-xs overflow-hidden">
+        <div className="p-4 sm:p-5 border-b border-slate-100 flex items-center justify-between">
           <div>
-            <h3 className="text-base font-bold text-slate-900">Histórico de Submissões & Pareceres</h3>
+            <h3 className="text-sm sm:text-base font-bold text-slate-900">Histórico de Submissões & Pareceres</h3>
             <p className="text-xs text-slate-500">Documentos entregues, índice de plágio e feedback docente</p>
           </div>
         </div>
 
         {mySubmissions.length === 0 ? (
-          <div className="p-12 text-center text-slate-400">
+          <div className="p-8 sm:p-12 text-center text-slate-400">
             <FileText className="w-10 h-10 mx-auto mb-2 text-slate-300" />
             <p className="font-bold text-slate-700">Nenhum documento submetido ainda.</p>
             <p className="text-xs mt-0.5">Clique em "Submeter Trabalho" para entregar a proposta inicial.</p>
@@ -248,7 +248,7 @@ export function StudentDashboard({ onNavigate, onOpenSubmitModal }: StudentDashb
         ) : (
           <div className="divide-y divide-slate-100">
             {mySubmissions.map((sub) => (
-              <div key={sub.id} className="p-6 hover:bg-slate-50/50 transition-colors">
+              <div key={sub.id} className="p-4 sm:p-6 hover:bg-slate-50/50 transition-colors">
                 <div className="flex flex-col gap-3">
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <div className="flex items-center gap-2">

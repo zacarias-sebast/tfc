@@ -52,7 +52,7 @@ export function PlagiarismBadge({ report, size = 'md' }: PlagiarismBadgeProps) {
         isOpen={isOpen}
         onClose={() => setIsOpen(false)}
         title="Relatório de Verificação de Plágio & Originalidade (RF09)"
-        subtitle={`Auditoria algorítmica realizada em ${new Date(report.checkedAt).toLocaleString('pt-PT')}`}
+        subtitle={`Auditoria de originalidade realizada em ${new Date(report.checkedAt).toLocaleString('pt-PT')}`}
         maxWidth="max-w-3xl"
       >
         <div className="space-y-6">
