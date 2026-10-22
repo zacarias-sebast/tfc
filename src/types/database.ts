@@ -74,6 +74,7 @@ export interface StudentGroup {
   advisorName?: string;
   preferredAdvisorId?: string;
   theme?: string;
+  academicYear?: string;
   createdAt: string;
 }
 
