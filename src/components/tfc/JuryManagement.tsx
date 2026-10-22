@@ -12,12 +12,6 @@ import {
   MapPin,
   CheckCircle,
   FileText,
-  UserCheck,
-  Send,
-  BookOpen,
-  Plus,
-  Clock,
-  Check
 } from 'lucide-react';
 
 export function JuryManagement() {
@@ -440,7 +434,7 @@ export function JuryManagement() {
                 onClick={handleSaveAta}
                 className="px-5 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-xl text-xs font-bold shadow-md shadow-purple-500/20 cursor-pointer"
               >
-                Gravar Ata & Concluir Ciclo
+                Guardar Ata & Concluir Ciclo
               </button>
             </div>
           </div>
