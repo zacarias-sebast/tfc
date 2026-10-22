@@ -160,7 +160,7 @@ export function AuthModal({ isOpen, onClose, defaultTab = 'login', initialEmail 
         resetRegisterForm();
         onClose();
       }}
-      title="Acesso ao Sistema de Gestão de TFC"
+      title="Acesso ao Sistema de Gestão de PAP"
       subtitle="Autenticação segura e registo com validação de regras de negócio"
       maxWidth="max-w-xl"
     >
@@ -410,7 +410,7 @@ export function AuthModal({ isOpen, onClose, defaultTab = 'login', initialEmail 
                       onChange={(e) => setRegPreferredAdvisorId(e.target.value)}
                       className="w-full p-2 bg-white border border-slate-200 rounded-xl text-xs focus:outline-blue-500"
                     >
-                      <option value="">Indicar professor...</option>
+                      
                       {activeAdvisors.length === 0 && (
                         <option value="pendente_coordenacao">
                           Aguardar Atribuição pela Coordenação
@@ -485,7 +485,7 @@ export function AuthModal({ isOpen, onClose, defaultTab = 'login', initialEmail 
                     required
                     value={regSpecialization}
                     onChange={(e) => setRegSpecialization(e.target.value)}
-                    placeholder="Ex:Engenharia de Software"
+                    placeholder="Engenharia de Software"
                     className="w-full p-2 bg-white border border-slate-200 rounded-xl text-xs focus:outline-blue-500"
                   />
                 </div>

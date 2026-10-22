@@ -2,425 +2,507 @@
 
 import React, { useState } from 'react';
 import { useApp } from '@/context/AppContext';
-import { Course, UserProfile } from '@/types/database';
-import { RoleBadge, StatusBadge } from '@/components/shared/Badge';
+import { StatusBadge } from '@/components/shared/Badge';
 import { Modal } from '@/components/shared/Modal';
 import {
-  Settings,
-  Plus,
+  ShieldCheck,
   BookOpen,
   Users,
-  ShieldAlert,
-  UserCheck,
-  Building,
   GraduationCap,
-  Layers,
+  Award,
+  Plus,
   Search,
-  CheckCircle,
+  CheckCircle2,
   XCircle,
-  Database,
+  Ban,
+  RotateCcw,
+  Sparkles,
   AlertTriangle
 } from 'lucide-react';
 
 export function AdminDashboard() {
   const {
     currentUser,
-    courses,
     users,
+    courses,
     submissions,
-    virtualLibrary,
+    juries,
     addCourse,
     assignCourseCoordinator,
     registerCoordinator,
+    approveStudent,
+    rejectStudent,
     deactivateUser,
-    approveStudent
+    resetToDemoData
   } = useApp();
 
-  const [activeTab, setActiveTab] = useState<'cursos' | 'usuarios' | 'estatisticas'>('cursos');
-  const [userSearch, setUserSearch] = useState('');
-  const [roleFilter, setRoleFilter] = useState<string>('todos');
+  const [activeTab, setActiveTab] = useState<'overview' | 'courses' | 'users' | 'coordinators'>('overview');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [roleFilter, setRoleFilter] = useState<string>('all');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
 
-  // Add course modal state
+  // Course Modal
   const [isCourseModalOpen, setIsCourseModalOpen] = useState(false);
-  const [courseCode, setCourseCode] = useState('');
-  const [courseName, setCourseName] = useState('');
-  const [courseDept, setCourseDept] = useState('');
-  const [courseDesc, setCourseDesc] = useState('');
-  const [courseTerminalLevel, setCourseTerminalLevel] = useState('13º Nível (Terminal)');
+  const [newCourseName, setNewCourseName] = useState('');
+  const [newCourseCode, setNewCourseCode] = useState('');
+  const [newCourseDept, setNewCourseDept] = useState('Departamento de Ciências da Computação e Tecnologias');
+  const [newCourseLevel, setNewCourseLevel] = useState('13º Nível (Terminal)');
+  const [newCourseDesc, setNewCourseDesc] = useState('');
 
-  // Assign coordinator state
-  const [selectedCourseForCoord, setSelectedCourseForCoord] = useState<Course | null>(null);
-  const [selectedCoordId, setSelectedCoordId] = useState('');
-
-  // Register coordinator modal state
+  // Coordinator Modal
   const [isCoordModalOpen, setIsCoordModalOpen] = useState(false);
   const [coordName, setCoordName] = useState('');
   const [coordCourseId, setCoordCourseId] = useState('');
-  const [coordPassword, setCoordPassword] = useState('coord123');
-  const [coordTeacherId, setCoordTeacherId] = useState('');
   const [coordPhone, setCoordPhone] = useState('');
-  const [coordSubmitting, setCoordSubmitting] = useState(false);
-  const [coordError, setCoordError] = useState('');
-  const [createdCoordSuccess, setCreatedCoordSuccess] = useState<{
-    name: string;
-    email: string;
-    password: string;
-    courseName?: string;
-  } | null>(null);
+  const [coordTeacherId, setCoordTeacherId] = useState('');
+  const [coordPassword, setCoordPassword] = useState('coord123');
+  const [coordMsg, setCoordMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
-  if (!currentUser) return null;
-
-  const eligibleCoordinators = users.filter((u) => u.role === 'coordenador');
+  const pendingUsers = users.filter((u) => u.status === 'pendente');
+  const activeUsers = users.filter((u) => u.status === 'ativo');
 
   const filteredUsers = users.filter((u) => {
     const matchesSearch =
-      u.name.toLowerCase().includes(userSearch.toLowerCase()) ||
-      u.email.toLowerCase().includes(userSearch.toLowerCase()) ||
-      (u.studentNumber && u.studentNumber.toLowerCase().includes(userSearch.toLowerCase())) ||
-      (u.teacherId && u.teacherId.toLowerCase().includes(userSearch.toLowerCase()));
-
-    const matchesRole = roleFilter === 'todos' || u.role === roleFilter;
-
-    return matchesSearch && matchesRole;
+      u.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      u.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (u.studentNumber && u.studentNumber.toLowerCase().includes(searchTerm.toLowerCase()));
+    const matchesRole = roleFilter === 'all' || u.role === roleFilter;
+    const matchesStatus = statusFilter === 'all' || u.status === statusFilter;
+    return matchesSearch && matchesRole && matchesStatus;
   });
 
   const handleCreateCourse = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!courseCode || !courseName || !courseDept) return;
+    if (!newCourseName.trim() || !newCourseCode.trim()) return;
 
     addCourse({
-      code: courseCode,
-      name: courseName,
-      department: courseDept,
-      description: courseDesc,
-      terminalLevel: courseTerminalLevel,
+      name: newCourseName.trim(),
+      code: newCourseCode.trim().toUpperCase(),
+      department: newCourseDept,
+      terminalLevel: newCourseLevel,
+      description: newCourseDesc,
       isActive: true
     });
 
+    setNewCourseName('');
+    setNewCourseCode('');
+    setNewCourseDesc('');
     setIsCourseModalOpen(false);
-    setCourseCode('');
-    setCourseName('');
-    setCourseDept('');
-    setCourseDesc('');
   };
 
-  const handleAssignCoordinator = () => {
-    if (!selectedCourseForCoord || !selectedCoordId) return;
-    assignCourseCoordinator(selectedCourseForCoord.id, selectedCoordId);
-    setSelectedCourseForCoord(null);
-    setSelectedCoordId('');
-  };
-
-  const handleCreateCoordinator = async (e: React.FormEvent) => {
+  const handleRegisterCoordinator = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!coordName.trim()) {
-      setCoordError('Indique o nome completo do docente.');
-      return;
-    }
-    if (!coordCourseId) {
-      setCoordError('Selecione o curso que o docente irá coordenar.');
-      return;
-    }
+    if (!coordName.trim() || !coordCourseId) return;
 
-    setCoordSubmitting(true);
-    setCoordError('');
+    setCoordMsg(null);
+    const res = await registerCoordinator({
+      name: coordName.trim(),
+      courseId: coordCourseId,
+      phone: coordPhone.trim(),
+      teacherId: coordTeacherId.trim() || `DOC-COORD-${Date.now().toString().slice(-4)}`,
+      password: coordPassword
+    });
 
-    try {
-      const res = await registerCoordinator({
-        name: coordName.trim(),
-        courseId: coordCourseId,
-        password: coordPassword?.trim() || 'coord123',
-        teacherId: coordTeacherId,
-        phone: coordPhone
-      });
-
-      if (res.success && res.user) {
-        setCreatedCoordSuccess({
-          name: res.user.name,
-          email: res.user.email,
-          password: coordPassword?.trim() || 'coord123',
-          courseName: res.user.courseName
-        });
-        setCoordName('');
-        setCoordCourseId('');
-        setCoordTeacherId('');
-        setCoordPhone('');
-        setCoordPassword('coord123');
-      } else {
-        setCoordError(res.error || 'Erro ao cadastrar coordenador.');
-      }
-    } catch (err: unknown) {
-      setCoordError('Erro inesperado ao cadastrar coordenador.');
-    } finally {
-      setCoordSubmitting(false);
+    if (res.success) {
+      setCoordMsg({ type: 'success', text: 'Coordenador registado e associado com sucesso ao curso!' });
+      setCoordName('');
+      setCoordPhone('');
+      setCoordTeacherId('');
+      setTimeout(() => {
+        setIsCoordModalOpen(false);
+        setCoordMsg(null);
+      }, 1200);
+    } else {
+      setCoordMsg({ type: 'error', text: res.error || 'Erro ao registar coordenador.' });
     }
   };
 
   return (
     <div className="space-y-6">
-      {/* Admin Banner */}
-      <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+      {/* Top Banner / Metrics */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs">
         <div>
-          <div className="flex items-center gap-2 mb-1">
-            <span className="text-xs font-bold text-purple-700 bg-purple-50 px-2.5 py-0.5 rounded-full border border-purple-200">
-              Administração-Geral do Sistema (Admin)
-            </span>
-            <span className="text-xs font-semibold text-slate-500">
-              {currentUser.name}
-            </span>
+          <div className="flex items-center gap-2 text-blue-700 font-bold text-xs uppercase tracking-wider mb-1">
+            <ShieldCheck className="w-4 h-4" />
+            <span>Administração Geral & Governança do Sistema</span>
           </div>
-          <h2 className="text-xl font-bold text-slate-800">
-            Gestão de Cursos, Perfis & Parâmetros do Sistema
+          <h2 className="text-2xl font-black text-slate-900 tracking-tight">
+            Painel Central do Administrador
           </h2>
-          <p className="text-xs text-slate-500 mt-0.5">
-            Configuração autónoma de cursos, atribuição de coordenadores e controlo global de utilizadores (RF01).
+          <p className="text-xs text-slate-500 mt-1">
+            Gestão curricular, aprovação de contas de utilizadores e supervisão dos fluxos da PAP.
           </p>
         </div>
 
-        <button
-          onClick={() => setIsCourseModalOpen(true)}
-          className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow-xs transition-all cursor-pointer"
-        >
-          <Plus className="w-4 h-4" />
-          <span>Cadastrar Novo Curso</span>
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setIsCourseModalOpen(true)}
+            className="flex items-center gap-2 px-4 py-2.5 bg-blue-900 hover:bg-blue-800 text-white rounded-xl text-xs font-bold transition-all shadow-sm cursor-pointer"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Criar Curso</span>
+          </button>
+          <button
+            onClick={() => setIsCoordModalOpen(true)}
+            className="flex items-center gap-2 px-4 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition-all shadow-sm cursor-pointer"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Novo Coordenador</span>
+          </button>
+          <button
+            onClick={() => {
+              if (confirm('Tem a certeza que deseja restaurar todos os dados para o padrão de demonstração?')) {
+                resetToDemoData();
+              }
+            }}
+            title="Repor dados de demonstração"
+            className="p-2.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl text-xs font-bold transition-all cursor-pointer"
+          >
+            <RotateCcw className="w-4 h-4" />
+          </button>
+        </div>
+      </div>
+
+      {/* KPI Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Cursos Ativos</span>
+            <div className="w-9 h-9 rounded-xl bg-blue-50 text-blue-700 flex items-center justify-center font-bold">
+              <BookOpen className="w-4 h-4" />
+            </div>
+          </div>
+          <div className="text-2xl font-black text-slate-900 mt-3">{courses.length}</div>
+          <p className="text-[11px] text-slate-400 mt-1">Programas académicos com PAP</p>
+        </div>
+
+        <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Total Utilizadores</span>
+            <div className="w-9 h-9 rounded-xl bg-indigo-50 text-indigo-700 flex items-center justify-center font-bold">
+              <Users className="w-4 h-4" />
+            </div>
+          </div>
+          <div className="text-2xl font-black text-slate-900 mt-3">{users.length}</div>
+          <p className="text-[11px] text-slate-400 mt-1">
+            {activeUsers.length} ativos • {pendingUsers.length} pendentes
+          </p>
+        </div>
+
+        <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Submissões TFC</span>
+            <div className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center font-bold">
+              <GraduationCap className="w-4 h-4" />
+            </div>
+          </div>
+          <div className="text-2xl font-black text-slate-900 mt-3">{submissions.length}</div>
+          <p className="text-[11px] text-slate-400 mt-1">
+            {submissions.filter((s) => s.status === 'homologado').length} homologados
+          </p>
+        </div>
+
+        <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Bancas de Júri</span>
+            <div className="w-9 h-9 rounded-xl bg-amber-50 text-amber-700 flex items-center justify-center font-bold">
+              <Award className="w-4 h-4" />
+            </div>
+          </div>
+          <div className="text-2xl font-black text-slate-900 mt-3">{juries.length}</div>
+          <p className="text-[11px] text-slate-400 mt-1">Defesas agendadas ou realizadas</p>
+        </div>
       </div>
 
       {/* Tabs */}
-      <div className="flex border-b border-slate-200 gap-4">
+      <div className="flex items-center gap-2 border-b border-slate-200 pb-2">
         <button
-          onClick={() => setActiveTab('cursos')}
-          className={`pb-3 px-2 text-xs font-bold flex items-center gap-2 border-b-2 transition-all cursor-pointer ${activeTab === 'cursos'
-              ? 'border-blue-600 text-blue-700'
-              : 'border-transparent text-slate-500 hover:text-slate-800'
-            }`}
+          onClick={() => setActiveTab('overview')}
+          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+            activeTab === 'overview'
+              ? 'bg-blue-900 text-white shadow-xs'
+              : 'text-slate-600 hover:bg-slate-100'
+          }`}
         >
-          <Layers className="w-4 h-4" />
-          <span>Cursos & Coordenação</span>
+          Visão Geral & Cursos
         </button>
-
         <button
-          onClick={() => setActiveTab('usuarios')}
-          className={`pb-3 px-2 text-xs font-bold flex items-center gap-2 border-b-2 transition-all cursor-pointer ${activeTab === 'usuarios'
-              ? 'border-blue-600 text-blue-700'
-              : 'border-transparent text-slate-500 hover:text-slate-800'
-            }`}
+          onClick={() => setActiveTab('users')}
+          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
+            activeTab === 'users'
+              ? 'bg-blue-900 text-white shadow-xs'
+              : 'text-slate-600 hover:bg-slate-100'
+          }`}
         >
-          <Users className="w-4 h-4" />
-          <span>Gestão de Perfis & Contas</span>
+          <span>Utilizadores & Moderação</span>
+          {pendingUsers.length > 0 && (
+            <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-500 text-white">
+              {pendingUsers.length}
+            </span>
+          )}
         </button>
-
         <button
-          onClick={() => setActiveTab('estatisticas')}
-          className={`pb-3 px-2 text-xs font-bold flex items-center gap-2 border-b-2 transition-all cursor-pointer ${activeTab === 'estatisticas'
-              ? 'border-blue-600 text-blue-700'
-              : 'border-transparent text-slate-500 hover:text-slate-800'
-            }`}
+          onClick={() => setActiveTab('coordinators')}
+          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+            activeTab === 'coordinators'
+              ? 'bg-blue-900 text-white shadow-xs'
+              : 'text-slate-600 hover:bg-slate-100'
+          }`}
         >
-          <Database className="w-4 h-4" />
-          <span>Métricas Globais do Sistema</span>
+          Corpo de Coordenação
         </button>
       </div>
 
-      {/* TAB 1: CURSOS */}
-      {activeTab === 'cursos' && (
-        <div className="bg-white rounded-3xl border border-slate-200/80 shadow-xs overflow-hidden">
-          <div className="p-5 border-b border-slate-100 flex items-center justify-between">
-            <div>
-              <h3 className="text-base font-bold text-slate-800">Cursos Registados</h3>
-              <p className="text-xs text-slate-500">
-                Atribua coordenadores e configure o nível terminal obrigatório
-              </p>
-            </div>
-          </div>
-
-          <div className="divide-y divide-slate-100">
-            {courses.map((course) => (
-              <div key={course.id} className="p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded">
-                      {course.code}
-                    </span>
-                    <span className="text-sm font-bold text-slate-800">{course.name}</span>
-                    <span className="text-xs text-emerald-600 font-semibold bg-emerald-50 px-2 py-0.5 rounded">
-                      {course.terminalLevel}
-                    </span>
-                  </div>
-
-                  <p className="text-xs text-slate-600">{course.description}</p>
-                  <p className="text-xs text-slate-500">
-                    Departamento: <strong className="text-slate-700">{course.department}</strong> • Coordenador:{' '}
-                    <span className="text-blue-700 font-bold">
-                      {course.coordinatorName || 'Pendente de atribuição'}
-                    </span>
-                  </p>
-                </div>
-
-                <button
-                  onClick={() => setSelectedCourseForCoord(course)}
-                  className="flex items-center gap-1.5 px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold transition-colors cursor-pointer shrink-0"
-                >
-                  <UserCheck className="w-3.5 h-3.5" />
-                  <span>Atribuir Coordenador</span>
-                </button>
+      {/* TAB CONTENT: Cursos & Visão Geral */}
+      {(activeTab === 'overview' || activeTab === 'courses') && (
+        <div className="space-y-4">
+          <div className="bg-white rounded-3xl border border-slate-200/80 shadow-xs overflow-hidden">
+            <div className="p-5 border-b border-slate-100 flex items-center justify-between">
+              <div>
+                <h3 className="text-base font-bold text-slate-900">Cursos Registados no Sistema</h3>
+                <p className="text-xs text-slate-500">Programas de ensino e respetivos coordenadores</p>
               </div>
-            ))}
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead className="bg-slate-50/70 border-b border-slate-100 text-slate-500 font-bold uppercase tracking-wider text-[10px]">
+                  <tr>
+                    <th className="px-6 py-3.5">Código & Nome</th>
+                    <th className="px-6 py-3.5">Departamento</th>
+                    <th className="px-6 py-3.5">Nível Terminal</th>
+                    <th className="px-6 py-3.5">Coordenador Designado</th>
+                    <th className="px-6 py-3.5">Estado</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 text-slate-700">
+                  {courses.map((c) => (
+                    <tr key={c.id} className="hover:bg-slate-50/50 transition-colors">
+                      <td className="px-6 py-4">
+                        <span className="font-extrabold text-blue-900 block">{c.code}</span>
+                        <span className="font-semibold text-slate-800 text-sm">{c.name}</span>
+                      </td>
+                      <td className="px-6 py-4 text-slate-600">{c.department}</td>
+                      <td className="px-6 py-4">
+                        <span className="px-2 py-1 rounded-md bg-slate-100 font-medium text-slate-700">
+                          {c.terminalLevel}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        {c.coordinatorName ? (
+                          <div className="flex items-center gap-1.5 font-semibold text-slate-800">
+                            <GraduationCap className="w-3.5 h-3.5 text-blue-600" />
+                            <span>{c.coordinatorName}</span>
+                          </div>
+                        ) : (
+                          <span className="text-slate-400 italic">Sem coordenador</span>
+                        )}
+                      </td>
+                      <td className="px-6 py-4">
+                        <StatusBadge status={c.isActive ? 'ativo' : 'desativado'} />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       )}
 
-      {/* TAB 2: GESTÃO DE UTILIZADORES (RF01) */}
-      {activeTab === 'usuarios' && (
-        <div className="bg-white rounded-3xl border border-slate-200/80 shadow-xs overflow-hidden">
-          <div className="p-5 border-b border-slate-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div>
-              <h3 className="text-base font-bold text-slate-800">
-                Diretório de Utilizadores (RF01)
-              </h3>
-              <p className="text-xs text-slate-500">
-                Ativação, edição e desativação de estudantes, orientadores e coordenadores
-              </p>
+      {/* TAB CONTENT: Utilizadores & Moderação */}
+      {activeTab === 'users' && (
+        <div className="space-y-4">
+          {/* Filters Bar */}
+          <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs flex flex-col md:flex-row gap-3 items-center justify-between">
+            <div className="relative w-full md:w-80">
+              <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+              <input
+                type="text"
+                placeholder="Pesquisar por nome, email ou nº..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-9 pr-3 py-2 text-xs rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+              />
             </div>
 
-            <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
-              <button
-                type="button"
-                onClick={() => {
-                  setCoordError('');
-                  setCreatedCoordSuccess(null);
-                  setIsCoordModalOpen(true);
-                }}
-                className="flex items-center gap-1.5 px-3.5 py-2 bg-blue-900 hover:bg-blue-800 text-white rounded-xl text-xs font-bold shadow-xs transition-colors cursor-pointer shrink-0"
-              >
-                <UserCheck className="w-4 h-4" />
-                <span>Cadastrar Coordenador</span>
-              </button>
-
+            <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
               <select
                 value={roleFilter}
                 onChange={(e) => setRoleFilter(e.target.value)}
-                className="p-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:outline-blue-500"
+                className="px-3 py-2 text-xs rounded-xl border border-slate-200 bg-white font-medium text-slate-700"
               >
-                <option value="todos">Todos os Perfis</option>
+                <option value="all">Todos os Papéis</option>
                 <option value="estudante">Estudantes</option>
                 <option value="orientador">Orientadores</option>
                 <option value="coordenador">Coordenadores</option>
                 <option value="admin">Administradores</option>
               </select>
 
-              <div className="relative flex-1 sm:w-56">
-                <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
-                <input
-                  type="text"
-                  value={userSearch}
-                  onChange={(e) => setUserSearch(e.target.value)}
-                  placeholder="Pesquisar por nome..."
-                  className="w-full pl-9 pr-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-blue-500"
-                />
-              </div>
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="px-3 py-2 text-xs rounded-xl border border-slate-200 bg-white font-medium text-slate-700"
+              >
+                <option value="all">Todos os Estados</option>
+                <option value="pendente">Pendentes</option>
+                <option value="ativo">Ativos</option>
+                <option value="rejeitado">Rejeitados</option>
+                <option value="desativado">Desativados</option>
+              </select>
             </div>
           </div>
 
-          <div className="divide-y divide-slate-100">
-            {filteredUsers.map((user) => (
-              <div key={user.id} className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-slate-50/50 transition-colors">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-slate-100 text-slate-700 font-bold flex items-center justify-center text-sm shrink-0">
-                    {user.name.charAt(0)}
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-bold text-slate-800">{user.name}</span>
-                      <RoleBadge role={user.role} />
-                      <StatusBadge status={user.status} />
-                      {user.isNonInstitutionalEmail && (
-                        <span className="text-[10px] font-bold text-amber-800 bg-amber-100 border border-amber-300 px-2 py-0.5 rounded-full">
-                          E-mail Não Institucional (Pendente)
-                        </span>
-                      )}
-                    </div>
-                    <p className="text-[11px] text-slate-500">{user.email} • {user.courseName || user.department}</p>
-                    {user.specialization && (
-                      <p className="text-[10px] text-slate-400">
-                        Especializações: {user.specialization.join(', ')}
-                      </p>
-                    )}
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-2 shrink-0">
-                  {user.status === 'ativo' ? (
-                    <button
-                      onClick={() => deactivateUser(user.id)}
-                      className="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 rounded-xl text-xs font-semibold transition-colors cursor-pointer"
-                    >
-                      Desativar
-                    </button>
-                  ) : user.status === 'pendente' ? (
-                    <button
-                      onClick={() => approveStudent(user.id)}
-                      className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition-colors cursor-pointer"
-                    >
-                      Aprovar
-                    </button>
+          {/* Users Table */}
+          <div className="bg-white rounded-3xl border border-slate-200/80 shadow-xs overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead className="bg-slate-50/70 border-b border-slate-100 text-slate-500 font-bold uppercase tracking-wider text-[10px]">
+                  <tr>
+                    <th className="px-6 py-3.5">Nome / Email</th>
+                    <th className="px-6 py-3.5">Papel</th>
+                    <th className="px-6 py-3.5">Curso / Depto</th>
+                    <th className="px-6 py-3.5">Estado</th>
+                    <th className="px-6 py-3.5 text-right">Ações de Moderação</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 text-slate-700">
+                  {filteredUsers.length === 0 ? (
+                    <tr>
+                      <td colSpan={5} className="p-8 text-center text-slate-400">
+                        Nenhum utilizador encontrado com os filtros selecionados.
+                      </td>
+                    </tr>
                   ) : (
-                    <button
-                      onClick={() => approveStudent(user.id)}
-                      className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold transition-colors cursor-pointer"
-                    >
-                      Reativar
-                    </button>
+                    filteredUsers.map((u) => (
+                      <tr key={u.id} className="hover:bg-slate-50/50 transition-colors">
+                        <td className="px-6 py-4">
+                          <div className="font-bold text-slate-800 text-sm">{u.name}</div>
+                          <div className="text-[11px] text-slate-500 flex items-center gap-1.5 mt-0.5">
+                            <span>{u.email}</span>
+                            {u.isNonInstitutionalEmail && (
+                              <span className="text-[10px] px-1.5 py-0.2 rounded bg-rose-100 text-rose-700 font-bold">
+                                Não Institucional
+                              </span>
+                            )}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <span className="uppercase text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-slate-100 text-slate-700">
+                            {u.role}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 text-slate-600">
+                          {u.courseName || u.department || '—'}
+                        </td>
+                        <td className="px-6 py-4">
+                          <StatusBadge status={u.status} />
+                        </td>
+                        <td className="px-6 py-4 text-right space-x-1.5">
+                          {u.status === 'pendente' && (
+                            <>
+                              <button
+                                onClick={() => approveStudent(u.id)}
+                                title="Aprovar conta"
+                                className="px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition-all shadow-xs cursor-pointer inline-flex items-center gap-1"
+                              >
+                                <CheckCircle2 className="w-3.5 h-3.5" />
+                                <span>Aprovar</span>
+                              </button>
+                              <button
+                                onClick={() => rejectStudent(u.id, 'Critérios de validação não cumpridos.')}
+                                title="Rejeitar conta"
+                                className="px-2.5 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-lg text-xs font-bold transition-all cursor-pointer inline-flex items-center gap-1"
+                              >
+                                <XCircle className="w-3.5 h-3.5" />
+                                <span>Rejeitar</span>
+                              </button>
+                            </>
+                          )}
+                          {u.status === 'ativo' && u.role !== 'admin' && (
+                            <button
+                              onClick={() => deactivateUser(u.id)}
+                              title="Desativar conta"
+                              className="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg text-xs font-semibold transition-all cursor-pointer inline-flex items-center gap-1"
+                            >
+                              <Ban className="w-3.5 h-3.5" />
+                              <span>Desativar</span>
+                            </button>
+                          )}
+                          {u.status === 'desativado' && (
+                            <button
+                              onClick={() => approveStudent(u.id)}
+                              title="Reativar conta"
+                              className="px-2.5 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-lg text-xs font-bold transition-all cursor-pointer inline-flex items-center gap-1"
+                            >
+                              <CheckCircle2 className="w-3.5 h-3.5" />
+                              <span>Reativar</span>
+                            </button>
+                          )}
+                        </td>
+                      </tr>
+                    ))
                   )}
-                </div>
-              </div>
-            ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       )}
 
-      {/* TAB 3: ESTATÍSTICAS GLOBAIS */}
-      {activeTab === 'estatisticas' && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs">
-            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-2">
-              Total de Utilizadores
-            </span>
-            <span className="text-3xl font-black text-slate-800">{users.length}</span>
-            <p className="text-xs text-slate-400 mt-2">
-              {users.filter(u => u.role === 'estudante').length} Estudantes, {users.filter(u => u.role === 'orientador').length} Professores
-            </p>
-          </div>
+      {/* TAB CONTENT: Corpo de Coordenação */}
+      {activeTab === 'coordinators' && (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {courses.map((course) => {
+            const coord = users.find((u) => u.id === course.coordinatorId);
+            return (
+              <div
+                key={course.id}
+                className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-xs flex flex-col justify-between"
+              >
+                <div>
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-[10px] font-extrabold px-2.5 py-1 rounded-full bg-blue-50 text-blue-700 uppercase tracking-wider">
+                      {course.code}
+                    </span>
+                    <span className="text-xs font-medium text-slate-400">{course.terminalLevel}</span>
+                  </div>
+                  <h4 className="font-bold text-slate-900 text-base mb-1">{course.name}</h4>
+                  <p className="text-xs text-slate-500 mb-4">{course.department}</p>
 
-          <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs">
-            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-2">
-              Submissões Ativas
-            </span>
-            <span className="text-3xl font-black text-blue-600">{submissions.length}</span>
-            <p className="text-xs text-slate-400 mt-2">
-              Processos em fluxo de auditoria e revisão
-            </p>
-          </div>
+                  <div className="p-3 bg-slate-50 rounded-2xl border border-slate-100 text-xs">
+                    <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-1">
+                      Coordenador Atribuído:
+                    </span>
+                    {coord ? (
+                      <div>
+                        <div className="font-bold text-slate-800">{coord.name}</div>
+                        <div className="text-slate-500 text-[11px]">{coord.email}</div>
+                        {coord.phone && <div className="text-slate-500 text-[11px]">{coord.phone}</div>}
+                      </div>
+                    ) : (
+                      <div className="text-amber-600 font-medium flex items-center gap-1.5">
+                        <AlertTriangle className="w-3.5 h-3.5" />
+                        <span>Nenhum coordenador associado</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
 
-          <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs">
-            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-2">
-              Biblioteca Virtual (TFCs)
-            </span>
-            <span className="text-3xl font-black text-purple-600">{virtualLibrary.length}</span>
-            <p className="text-xs text-slate-400 mt-2">
-              Trabalhos homologados com ata final
-            </p>
-          </div>
-
-          <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs">
-            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-2">
-              Cursos Matriculados
-            </span>
-            <span className="text-3xl font-black text-teal-600">{courses.length}</span>
-            <p className="text-xs text-slate-400 mt-2">
-              Departamentos com workflow ativo
-            </p>
-          </div>
+                <div className="mt-4 pt-4 border-t border-slate-100 flex items-center justify-end">
+                  <button
+                    onClick={() => {
+                      setCoordCourseId(course.id);
+                      setIsCoordModalOpen(true);
+                    }}
+                    className="text-xs font-bold text-blue-700 hover:text-blue-900 cursor-pointer"
+                  >
+                    {coord ? 'Alterar / Associar Outro' : '+ Designar Coordenador'}
+                  </button>
+                </div>
+              </div>
+            );
+          })}
         </div>
       )}
 
@@ -428,317 +510,178 @@ export function AdminDashboard() {
       <Modal
         isOpen={isCourseModalOpen}
         onClose={() => setIsCourseModalOpen(false)}
-        title="Cadastrar Novo Curso (Admin)"
+        title="Criar Novo Programa Curricular (Curso)"
+        subtitle="Adiciona um novo curso com workflow de Trabalho de Fim de Curso"
       >
-        <form onSubmit={handleCreateCourse} className="space-y-4">
+        <form onSubmit={handleCreateCourse} className="space-y-4 text-xs">
+          <div>
+            <label className="block font-bold text-slate-700 mb-1">Nome do Curso</label>
+            <input
+              type="text"
+              required
+              placeholder="Ex: Engenharia Mecatrónica"
+              value={newCourseName}
+              onChange={(e) => setNewCourseName(e.target.value)}
+              className="w-full px-3 py-2 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+            />
+          </div>
+
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">Código do Curso:</label>
+              <label className="block font-bold text-slate-700 mb-1">Código do Curso </label>
               <input
                 type="text"
                 required
-                value={courseCode}
-                onChange={(e) => setCourseCode(e.target.value)}
-                placeholder="Ex: LEI-2026"
-                className="w-full p-2.5 bg-white border border-slate-200 rounded-xl text-xs focus:outline-blue-500"
+                placeholder="Ex: LEM-2026"
+                value={newCourseCode}
+                onChange={(e) => setNewCourseCode(e.target.value)}
+                className="w-full px-3 py-2 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
               />
             </div>
-
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">Nível Terminal (RN01):</label>
-              <input
-                type="text"
-                required
-                value={courseTerminalLevel}
-                onChange={(e) => setCourseTerminalLevel(e.target.value)}
-                placeholder="13º Nível (Terminal)"
-                className="w-full p-2.5 bg-white border border-slate-200 rounded-xl text-xs focus:outline-blue-500"
-              />
+              <label className="block font-bold text-slate-700 mb-1">Classe de Conclusão</label>
+              <select
+                value={newCourseLevel}
+                onChange={(e) => setNewCourseLevel(e.target.value)}
+                className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white"
+              >
+                <option value="13º Classe (Conclusão)">13º Classe (Conclusão)</option>
+              </select>
             </div>
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1">Nome do Curso:</label>
+            <label className="block font-bold text-slate-700 mb-1">Departamento</label>
             <input
               type="text"
-              required
-              value={courseName}
-              onChange={(e) => setCourseName(e.target.value)}
-              placeholder="Ex: Engenharia Informática e Telecomunicações"
-              className="w-full p-2.5 bg-white border border-slate-200 rounded-xl text-xs focus:outline-blue-500"
+              value={newCourseDept}
+              onChange={(e) => setNewCourseDept(e.target.value)}
+              className="w-full px-3 py-2 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1">Departamento:</label>
-            <input
-              type="text"
-              required
-              value={courseDept}
-              onChange={(e) => setCourseDept(e.target.value)}
-              placeholder="Ex: Departamento de Ciências da Computação"
-              className="w-full p-2.5 bg-white border border-slate-200 rounded-xl text-xs focus:outline-blue-500"
-            />
-          </div>
-
-          <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1">Descrição do Curso:</label>
+            <label className="block font-bold text-slate-700 mb-1">Descrição</label>
             <textarea
-              rows={2}
-              value={courseDesc}
-              onChange={(e) => setCourseDesc(e.target.value)}
-              placeholder="Ementa e objetivos gerais da formação..."
-              className="w-full p-2.5 bg-white border border-slate-200 rounded-xl text-xs focus:outline-blue-500"
+              rows={3}
+              placeholder="Breve descrição dos objetivos pedagógicos e metodologias de TFC..."
+              value={newCourseDesc}
+              onChange={(e) => setNewCourseDesc(e.target.value)}
+              className="w-full px-3 py-2 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
             />
           </div>
 
-          <div className="flex justify-end gap-2 pt-2 border-t border-slate-100">
+          <div className="flex justify-end gap-2 pt-3 border-t border-slate-100">
             <button
               type="button"
               onClick={() => setIsCourseModalOpen(false)}
-              className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-xl text-xs font-semibold cursor-pointer"
+              className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold cursor-pointer"
             >
               Cancelar
             </button>
             <button
               type="submit"
-              className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold cursor-pointer"
+              className="px-4 py-2 bg-blue-900 hover:bg-blue-800 text-white rounded-xl font-bold cursor-pointer"
             >
-              Salvar Curso
+              Criar Curso
             </button>
           </div>
         </form>
       </Modal>
 
-      {/* Modal Atribuir Coordenador ao Curso */}
+      {/* Modal Registar Coordenador */}
       <Modal
-        isOpen={Boolean(selectedCourseForCoord)}
-        onClose={() => setSelectedCourseForCoord(null)}
-        title="Atribuir Coordenador de Curso"
-        subtitle={`Curso: ${selectedCourseForCoord?.name}`}
+        isOpen={isCoordModalOpen}
+        onClose={() => setIsCoordModalOpen(false)}
+        title="Registar / Designar Coordenador de Curso"
+        subtitle="Regista a conta institucional oficial com e-mail ipuorientacao@gmail.com"
       >
-        <div className="space-y-4">
-          <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1.5">
-              Selecione o Coordenador:
-            </label>
-            <select
-              value={selectedCoordId}
-              onChange={(e) => setSelectedCoordId(e.target.value)}
-              className="w-full p-2.5 bg-white border border-slate-200 rounded-xl text-xs focus:outline-blue-500"
+        <form onSubmit={handleRegisterCoordinator} className="space-y-4 text-xs">
+          {coordMsg && (
+            <div
+              className={`p-3 rounded-xl ${
+                coordMsg.type === 'success'
+                  ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
+                  : 'bg-rose-50 text-rose-800 border border-rose-200'
+              }`}
             >
-              <option value="">Selecione um docente com perfil de coordenação...</option>
-              {eligibleCoordinators.map((c) => (
+              {coordMsg.text}
+            </div>
+          )}
+
+          <div>
+            <label className="block font-bold text-slate-700 mb-1">Nome Completo do Docente *</label>
+            <input
+              type="text"
+              required
+              placeholder="Ex: Prof. Dr. Armando Sebastião"
+              value={coordName}
+              onChange={(e) => setCoordName(e.target.value)}
+              className="w-full px-3 py-2 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+            />
+          </div>
+
+          <div>
+            <label className="block font-bold text-slate-700 mb-1">Curso a Coordenar *</label>
+            <select
+              required
+              value={coordCourseId}
+              onChange={(e) => setCoordCourseId(e.target.value)}
+              className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white"
+            >
+              <option value="">Selecione o Curso...</option>
+              {courses.map((c) => (
                 <option key={c.id} value={c.id}>
-                  {c.name} — ({c.email})
+                  {c.code} - {c.name}
                 </option>
               ))}
             </select>
           </div>
 
-          <div className="flex justify-end gap-2 pt-2 border-t border-slate-100">
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block font-bold text-slate-700 mb-1">ID / Matrícula Docente</label>
+              <input
+                type="text"
+                placeholder="Ex: DOC-COORD-03"
+                value={coordTeacherId}
+                onChange={(e) => setCoordTeacherId(e.target.value)}
+                className="w-full px-3 py-2 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+              />
+            </div>
+            <div>
+              <label className="block font-bold text-slate-700 mb-1">Telefone</label>
+              <input
+                type="text"
+                placeholder="+244 9..."
+                value={coordPhone}
+                onChange={(e) => setCoordPhone(e.target.value)}
+                className="w-full px-3 py-2 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+              />
+            </div>
+          </div>
+
+          <div className="p-3 bg-blue-50 rounded-xl border border-blue-100 text-blue-900 text-[11px]">
+            <strong>Nota Institucional:</strong> A conta de coordenação será criada com o e-mail oficial{' '}
+            <code>ipuorientacao@gmail.com</code> e senha padrão <code>{coordPassword}</code>.
+          </div>
+
+          <div className="flex justify-end gap-2 pt-3 border-t border-slate-100">
             <button
               type="button"
-              onClick={() => setSelectedCourseForCoord(null)}
-              className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-xl text-xs font-semibold cursor-pointer"
+              onClick={() => setIsCoordModalOpen(false)}
+              className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold cursor-pointer"
             >
               Cancelar
             </button>
             <button
-              type="button"
-              disabled={!selectedCoordId}
-              onClick={handleAssignCoordinator}
-              className="px-5 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white rounded-xl text-xs font-bold cursor-pointer"
+              type="submit"
+              className="px-4 py-2 bg-blue-900 hover:bg-blue-800 text-white rounded-xl font-bold cursor-pointer"
             >
-              Confirmar Atribuição
+              Registar Coordenador
             </button>
           </div>
-        </div>
-      </Modal>
-
-      {/* Modal Cadastrar Coordenador de Curso (RF01) */}
-      <Modal
-        isOpen={isCoordModalOpen}
-        onClose={() => {
-          setIsCoordModalOpen(false);
-          setCreatedCoordSuccess(null);
-          setCoordError('');
-        }}
-        title="Cadastrar Novo Coordenador de Curso"
-        subtitle="Atribuição oficial de credenciais com e-mail institucional (ipuorientacao@gmail.com)"
-      >
-        {createdCoordSuccess ? (
-          <div className="space-y-4">
-            <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-2xl space-y-2.5">
-              <div className="flex items-center gap-2 text-emerald-800 font-bold text-xs">
-                <CheckCircle className="w-4 h-4 text-emerald-600" />
-                <span>Coordenador Cadastrado e Credenciais Atribuídas!</span>
-              </div>
-              <p className="text-xs text-slate-600">
-                O coordenador foi criado no sistema com sucesso. As credenciais de acesso para a tela de login são:
-              </p>
-              <div className="p-3.5 bg-white rounded-xl border border-emerald-200 text-xs space-y-2">
-                <div className="flex justify-between items-center border-b border-slate-100 pb-1.5">
-                  <span className="text-slate-500 font-medium">Nome do Coordenador:</span>
-                  <span className="font-bold text-slate-800">{createdCoordSuccess.name}</span>
-                </div>
-                <div className="flex justify-between items-center border-b border-slate-100 pb-1.5">
-                  <span className="text-slate-500 font-medium">Curso Coordenado:</span>
-                  <span className="font-bold text-slate-800">{createdCoordSuccess.courseName}</span>
-                </div>
-                <div className="flex justify-between items-center border-b border-slate-100 pb-1.5">
-                  <span className="text-slate-500 font-medium">E-mail Institucional de Login:</span>
-                  <span className="font-mono font-bold text-blue-900 bg-blue-50 px-2 py-0.5 rounded border border-blue-200">
-                    {createdCoordSuccess.email}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-slate-500 font-medium">Palavra-passe Atribuída:</span>
-                  <span className="font-mono font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
-                    {createdCoordSuccess.password}
-                  </span>
-                </div>
-              </div>
-              <p className="text-[11px] text-slate-500 italic">
-                O coordenador pode agora aceder à tela de Login com este e-mail e palavra-passe para validar inscrições e gerir os TFCs.
-              </p>
-            </div>
-
-            <div className="flex justify-end pt-2">
-              <button
-                type="button"
-                onClick={() => {
-                  setIsCoordModalOpen(false);
-                  setCreatedCoordSuccess(null);
-                }}
-                className="px-5 py-2 bg-blue-900 hover:bg-blue-800 text-white rounded-xl text-xs font-bold cursor-pointer"
-              >
-                Concluir
-              </button>
-            </div>
-          </div>
-        ) : (
-          <form onSubmit={handleCreateCoordinator} className="space-y-4">
-            {coordError && (
-              <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-800 flex items-center gap-2">
-                <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0" />
-                <span>{coordError}</span>
-              </div>
-            )}
-
-            <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">
-                Nome Completo do Docente:*
-              </label>
-              <input
-                type="text"
-                required
-                value={coordName}
-                onChange={(e) => setCoordName(e.target.value)}
-                placeholder="Ex: Prof. Dr. Armando Ferreira"
-                className="w-full p-2.5 bg-white border border-slate-200 rounded-xl text-xs focus:outline-blue-500"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">
-                Curso que irá Coordenar:*
-              </label>
-              <select
-                required
-                value={coordCourseId}
-                onChange={(e) => setCoordCourseId(e.target.value)}
-                className="w-full p-2.5 bg-white border border-slate-200 rounded-xl text-xs focus:outline-blue-500"
-              >
-                <option value="">Selecione o curso...</option>
-                {courses.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name} ({c.code}) - {c.department}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
-                  E-mail Institucional:
-                </label>
-                <input
-                  type="email"
-                  disabled
-                  value="ipuorientacao@gmail.com"
-                  className="w-full p-2.5 bg-slate-100 border border-slate-200 rounded-xl text-xs text-slate-600 font-semibold cursor-not-allowed"
-                />
-                <span className="text-[10px] text-slate-400 block mt-0.5">
-                  E-mail institucional único fixo
-                </span>
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
-                  Palavra-passe de Acesso:*
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={coordPassword}
-                  onChange={(e) => setCoordPassword(e.target.value)}
-                  placeholder="coord123"
-                  className="w-full p-2.5 bg-white border border-slate-200 rounded-xl text-xs focus:outline-blue-500 font-mono"
-                />
-                <span className="text-[10px] text-slate-400 block mt-0.5">
-                  Credencial fornecida pelo administrador
-                </span>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
-                  Nº de Identificação Docente:
-                </label>
-                <input
-                  type="text"
-                  value={coordTeacherId}
-                  onChange={(e) => setCoordTeacherId(e.target.value)}
-                  placeholder="Ex: DOC-COORD-2026"
-                  className="w-full p-2.5 bg-white border border-slate-200 rounded-xl text-xs focus:outline-blue-500"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
-                  Telefone de Contacto:
-                </label>
-                <input
-                  type="tel"
-                  value={coordPhone}
-                  onChange={(e) => setCoordPhone(e.target.value)}
-                  placeholder="+244 9..."
-                  className="w-full p-2.5 bg-white border border-slate-200 rounded-xl text-xs focus:outline-blue-500"
-                />
-              </div>
-            </div>
-
-            <div className="flex justify-end gap-2 pt-3 border-t border-slate-100">
-              <button
-                type="button"
-                onClick={() => setIsCoordModalOpen(false)}
-                className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-xl text-xs font-semibold cursor-pointer"
-              >
-                Cancelar
-              </button>
-              <button
-                type="submit"
-                disabled={coordSubmitting}
-                className="px-5 py-2 bg-blue-900 hover:bg-blue-800 disabled:opacity-50 text-white rounded-xl text-xs font-bold shadow-xs cursor-pointer"
-              >
-                {coordSubmitting ? 'A registar...' : 'Atribuir Credenciais & Cadastrar'}
-              </button>
-            </div>
-          </form>
-        )}
+        </form>
       </Modal>
     </div>
   );

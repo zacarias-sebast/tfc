@@ -21,6 +21,43 @@ import {
   Sparkles
 } from 'lucide-react';
 
+const SYMBOLS = "!@#$%&*?-_+=";
+
+const passwordRules = (pw: string) => ({
+  length: pw.length >= 8,
+  lower: /[a-z]/.test(pw),
+  upper: /[A-Z]/.test(pw),
+  number: /\d/.test(pw),
+  symbol: /[^A-Za-z0-9]/.test(pw),
+});
+
+const isStrongPassword = (pw: string) =>
+  Object.values(passwordRules(pw)).every(Boolean);
+
+function generateStrongPassword(length = 14) {
+  const sets = [
+    "abcdefghijkmnopqrstuvwxyz",
+    "ABCDEFGHJKLMNPQRSTUVWXYZ",
+    "23456789",
+    SYMBOLS,
+  ];
+  const all = sets.join("");
+  const rand = (max: number) => {
+    const buf = new Uint32Array(1);
+    crypto.getRandomValues(buf);
+    return buf[0] % max;
+  };
+
+  const chars = sets.map((s) => s[rand(s.length)]);
+  while (chars.length < length) chars.push(all[rand(all.length)]);
+
+  for (let i = chars.length - 1; i > 0; i--) {
+    const j = rand(i + 1);
+    [chars[i], chars[j]] = [chars[j], chars[i]];
+  }
+  return chars.join("");
+}
+
 export default function RegisterPage() {
   const router = useRouter();
   const { currentUser, users, courses, registerUser, logout } = useApp();
@@ -32,18 +69,37 @@ export default function RegisterPage() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
 
-  // Student fields (RN01)
-  const [courseId, setCourseId] = useState('');
-  const [academicLevel, setAcademicLevel] = useState<AcademicLevel>('13º Nível (Terminal)');
-  const [preferredAdvisorId, setPreferredAdvisorId] = useState('');
+  const rules = passwordRules(password);
 
-  // Advisor fields (RN02)
+  const handleSuggest = () => {
+    setPassword(generateStrongPassword());
+    setShowPassword(true);
+  };
+
+  // Student fields
+  const [courseId, setCourseId] = useState('');
+  const [academicLevel, setAcademicLevel] = useState<AcademicLevel>('13º Classe (Terminal)');
+  const [preferredAdvisorId, setPreferredAdvisorId] = useState('');
+  const [groupMembers, setGroupMembers] = useState<string[]>([]);
+  const [newMemberName, setNewMemberName] = useState('');
+
+  // Advisor fields 
   const [teacherId, setTeacherId] = useState('');
   const [specialization, setSpecialization] = useState('');
 
   const [errorMessage, setErrorMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
   const [loading, setLoading] = useState(false);
+
+  const handleAddMember = () => {
+    if (!newMemberName.trim()) return;
+    setGroupMembers((prev) => [...prev, newMemberName.trim()]);
+    setNewMemberName('');
+  };
+
+  const handleRemoveMember = (idx: number) => {
+    setGroupMembers((prev) => prev.filter((_, i) => i !== idx));
+  };
 
   const clearAllFields = () => {
     setName('');
@@ -52,8 +108,10 @@ export default function RegisterPage() {
     setPassword('');
     setShowPassword(false);
     setCourseId('');
-    setAcademicLevel('13º Nível (Terminal)');
+    setAcademicLevel('13º Classe (Terminal)');
     setPreferredAdvisorId('');
+    setGroupMembers([]);
+    setNewMemberName('');
     setTeacherId('');
     setSpecialization('');
     setErrorMessage('');
@@ -61,7 +119,6 @@ export default function RegisterPage() {
     setLoading(false);
   };
 
-  // Garante que todos os campos começam 100% limpos ao entrar na página
   useEffect(() => {
     clearAllFields();
   }, []);
@@ -70,6 +127,8 @@ export default function RegisterPage() {
     setRole(newRole);
     setCourseId('');
     setPreferredAdvisorId('');
+    setGroupMembers([]);
+    setNewMemberName('');
     setTeacherId('');
     setSpecialization('');
     setErrorMessage('');
@@ -86,7 +145,6 @@ export default function RegisterPage() {
 
     try {
       const cleanEmail = email.trim().toLowerCase();
-      const isInstitutional = cleanEmail === 'ipuorientacao@gmail.com';
 
       const res = await registerUser({
         name,
@@ -94,9 +152,10 @@ export default function RegisterPage() {
         password,
         role,
         phone,
-        courseId: courseId, // Obrigatório para Estudante e Orientador
+        courseId: courseId,
         academicLevel: role === 'estudante' ? academicLevel : undefined,
         preferredAdvisorId: role === 'estudante' ? preferredAdvisorId : undefined,
+        groupMembers: role === 'estudante' ? groupMembers : undefined,
         teacherId: role === 'orientador' ? teacherId : undefined,
         specialization: role === 'orientador'
           ? specialization.split(',').map((s) => s.trim()).filter(Boolean)
@@ -106,7 +165,6 @@ export default function RegisterPage() {
       if (!res.success) {
         setErrorMessage(res.error || 'Erro ao realizar o registo.');
       } else {
-        // Limpa os campos após submissão com sucesso
         setName('');
         setEmail('');
         setPhone('');
@@ -114,18 +172,14 @@ export default function RegisterPage() {
         setShowPassword(false);
         setCourseId('');
         setPreferredAdvisorId('');
+        setGroupMembers([]);
+        setNewMemberName('');
         setTeacherId('');
         setSpecialization('');
 
-        if (!isInstitutional) {
-          setSuccessMessage(
-            'Inscrição submetida com e-mail não institucional. Nota: Por norma do sistema, esta conta não é aceite automaticamente e ficará pendente por tempo indeterminado.'
-          );
-        } else {
-          setSuccessMessage(
-            'Conta registada com sucesso com o e-mail institucional! A aguardar validação e homologação pela Coordenação de Curso...'
-          );
-        }
+        setSuccessMessage(
+          'Registo submetido com sucesso! A sua conta foi enviada para a Coordenação de Curso para validação dos dados académicos.'
+        );
         setTimeout(() => {
           router.push('/');
         }, 1500);
@@ -150,7 +204,7 @@ export default function RegisterPage() {
           </div>
           <div>
             <span className="text-base font-extrabold text-slate-900 tracking-tight block leading-tight">
-              PORTAL ACADÉMICO DE TFC
+              PORTAL ACADÉMICO DA PAP
             </span>
             <span className="text-[11px] text-slate-500 font-medium block">
               Inscrição e Registo Académico
@@ -167,7 +221,6 @@ export default function RegisterPage() {
         </Link>
       </header>
 
-      {/* Main Container */}
       <main className="flex-1 flex items-center justify-center p-4 sm:p-6 lg:p-8">
         <div className="w-full max-w-xl space-y-6">
           <div className="bg-white border border-slate-200/90 rounded-3xl p-6 sm:p-8 shadow-xl shadow-slate-200/60 relative overflow-hidden">
@@ -201,7 +254,7 @@ export default function RegisterPage() {
             {currentUser && (
               <div className="mb-5 p-3.5 bg-blue-50 border border-blue-200 rounded-2xl text-xs flex items-center justify-between gap-3">
                 <div>
-                  <span className="text-slate-600 block">Sessão atualmente ativa:</span>
+                  <span className="text-slate-600 block">Sessão ativa:</span>
                   <strong className="text-blue-900 font-bold">{currentUser.name}</strong> ({currentUser.role})
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
@@ -241,7 +294,7 @@ export default function RegisterPage() {
                   }`}
                 >
                   <GraduationCap className="w-4 h-4" />
-                  <span>Estudante (Finalista)</span>
+                  <span>Aluno</span>
                 </button>
 
                 <button
@@ -254,7 +307,7 @@ export default function RegisterPage() {
                   }`}
                 >
                   <Users className="w-4 h-4" />
-                  <span>Orientador (Docente)</span>
+                  <span>Orientador</span>
                 </button>
               </div>
             </div>
@@ -273,7 +326,25 @@ export default function RegisterPage() {
                       required
                       value={name}
                       onChange={(e) => setName(e.target.value)}
-                      placeholder="Nome e Apelido"
+                      placeholder="Primeiro e último nome"
+                      className="w-full pl-9 pr-3 py-2 bg-white border border-slate-200 rounded-xl text-xs text-slate-900 placeholder-slate-400 focus:outline-hidden focus:border-blue-900 focus:ring-1 focus:ring-blue-900"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                    Telefone de Contacto:
+                  </label>
+                  <div className="relative">
+                    <Phone className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
+                    <input
+                      type="tel"
+                      inputMode="numeric"
+                      maxLength={9}
+                      pattern="9[0-9]{8}"
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value.replace(/\D/g, "").slice(0, 9))}
+                      placeholder="+244 943 ... ..."
                       className="w-full pl-9 pr-3 py-2 bg-white border border-slate-200 rounded-xl text-xs text-slate-900 placeholder-slate-400 focus:outline-hidden focus:border-blue-900 focus:ring-1 focus:ring-blue-900"
                     />
                   </div>
@@ -282,11 +353,8 @@ export default function RegisterPage() {
                 <div>
                   <div className="flex items-center justify-between mb-1">
                     <label className="block text-xs font-bold text-slate-700">
-                      E-mail Institucional:*
+                      Use E-mail: ipuorientacao@gmail.com*
                     </label>
-                    <span className="text-[10px] text-blue-900 font-semibold bg-blue-50 px-2 py-0.5 rounded-md border border-blue-200">
-                      Obrigatório: ipuorientacao@gmail.com
-                    </span>
                   </div>
                   <div className="relative">
                     <Mail className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
@@ -317,34 +385,26 @@ export default function RegisterPage() {
                     </p>
                   )}
                 </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">
-                    Telefone de Contacto:
-                  </label>
-                  <div className="relative">
-                    <Phone className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
-                    <input
-                      type="tel"
-                      value={phone}
-                      onChange={(e) => setPhone(e.target.value)}
-                      placeholder="+244 9..."
-                      className="w-full pl-9 pr-3 py-2 bg-white border border-slate-200 rounded-xl text-xs text-slate-900 placeholder-slate-400 focus:outline-hidden focus:border-blue-900 focus:ring-1 focus:ring-blue-900"
-                    />
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block text-xs font-bold text-slate-700">Senha:</label>
+                    <button
+                      type="button"
+                      onClick={handleSuggest}
+                      className="text-[11px] font-semibold text-blue-900 hover:underline"
+                    >
+                      Sugerir senha forte
+                    </button>
                   </div>
-                </div>
 
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">
-                    Palavra-passe:
-                  </label>
                   <div className="relative">
                     <Lock className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
                     <input
-                      type={showPassword ? 'text' : 'password'}
+                      type={showPassword ? "text" : "password"}
                       required
+                      minLength={8}
+                      autoComplete="new-password"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       placeholder="••••••••••••"
@@ -353,11 +413,26 @@ export default function RegisterPage() {
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600 cursor-pointer"
+                      className="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600"
+                      aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
                     >
                       {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                     </button>
                   </div>
+
+                  <ul className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1 text-[11px]">
+                    {[
+                      { ok: rules.length, label: "Mínimo 8 caracteres" },
+                      { ok: rules.lower, label: "Letra minúscula" },
+                      { ok: rules.upper, label: "Letra maiúscula" },
+                      { ok: rules.number, label: "Número" },
+                      { ok: rules.symbol, label: "Símbolo (!@#$%...)" },
+                    ].map(({ ok, label }) => (
+                      <li key={label} className={ok ? "text-green-600" : "text-slate-400"}>
+                        {ok ? "✓" : "○"} {label}
+                      </li>
+                    ))}
+                  </ul>
                 </div>
               </div>
 
@@ -366,12 +441,12 @@ export default function RegisterPage() {
                 <div className="p-4 bg-blue-50/60 border border-blue-200 rounded-2xl space-y-3">
                   <div className="flex items-center gap-1.5 text-blue-900 font-bold text-xs">
                     <Sparkles className="w-3.5 h-3.5 text-blue-700" />
-                    <span>Requisitos de Matrícula Terminal</span>
+                    <span>Requisitos de Matrícula</span>
                   </div>
 
                   <div>
                     <label className="block text-xs font-semibold text-slate-700 mb-1">
-                      Curso de Matrícula:
+                      Curso a frequentar:
                     </label>
                     <select
                       required
@@ -398,9 +473,7 @@ export default function RegisterPage() {
                         onChange={(e) => setAcademicLevel(e.target.value as any)}
                         className="w-full p-2 bg-white border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-hidden focus:border-blue-900"
                       >
-                        <option value="13º Nível (Terminal)">13º Nível / 13ª Classe (Terminal)</option>
-                        <option value="12º Nível">12º Nível (Não Terminal)</option>
-                        <option value="11º Nível">11º Nível (Não Terminal)</option>
+                        <option value="13ª Classe (Conclusão)">13ª Classe (Conclusão)</option>
                       </select>
                     </div>
 
@@ -433,6 +506,70 @@ export default function RegisterPage() {
                       </select>
                     </div>
                   </div>
+
+                  {/* Opção de Adicionar Elementos do Grupo */}
+                  <div className="pt-3 border-t border-blue-200/80">
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="block text-xs font-semibold text-slate-700">
+                        Elementos do Grupo (Colegas de Equipa):
+                      </label>
+                      <span className="text-[11px] text-slate-500 font-normal">
+                        Opcional
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-slate-500 mb-2 leading-relaxed">
+                      Se o seu TFC for em grupo, adicione os nomes dos seus colegas. Apenas você terá acesso ao sistema com estas credenciais; os nomes dos seus colegas ficam devidamente registados no sistema para o trabalho.
+                    </p>
+
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={newMemberName}
+                        onChange={(e) => setNewMemberName(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault();
+                            handleAddMember();
+                          }
+                        }}
+                        placeholder="Nome completo do colega de grupo..."
+                        className="flex-1 p-2 bg-white border border-slate-200 rounded-xl text-xs text-slate-900 placeholder:text-slate-400 focus:outline-hidden focus:border-blue-900"
+                      />
+                      <button
+                        type="button"
+                        onClick={handleAddMember}
+                        className="px-3.5 py-2 bg-blue-900 text-white rounded-xl text-xs font-semibold hover:bg-blue-800 transition-colors cursor-pointer shrink-0"
+                      >
+                        + Adicionar
+                      </button>
+                    </div>
+
+                    {groupMembers.length > 0 && (
+                      <div className="mt-2.5 bg-white/90 p-2.5 rounded-xl border border-blue-100 space-y-1.5">
+                        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">
+                          Colegas adicionados ({groupMembers.length}):
+                        </span>
+                        <div className="flex flex-wrap gap-1.5">
+                          {groupMembers.map((member, idx) => (
+                            <span
+                              key={idx}
+                              className="inline-flex items-center gap-1.5 bg-blue-50 text-blue-900 border border-blue-200 px-2.5 py-1 rounded-lg text-xs font-medium"
+                            >
+                              <span>{member}</span>
+                              <button
+                                type="button"
+                                onClick={() => handleRemoveMember(idx)}
+                                className="text-slate-400 hover:text-rose-600 cursor-pointer text-xs font-bold leading-none ml-0.5"
+                                title="Remover"
+                              >
+                                ×
+                              </button>
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
 
@@ -441,13 +578,12 @@ export default function RegisterPage() {
                 <div className="p-4 bg-teal-50/60 border border-teal-200 rounded-2xl space-y-3">
                   <div className="flex items-center gap-1.5 text-teal-900 font-bold text-xs">
                     <Users className="w-3.5 h-3.5 text-teal-700" />
-                    <span>Identificação Docente e Afiliação de Curso</span>
+                    <span>Afiliação de Curso</span>
                   </div>
 
-                  {/* Seleção Obrigatória de Curso para o Orientador */}
                   <div>
                     <label className="block text-xs font-semibold text-slate-700 mb-1">
-                      Curso de Atuação / Afiliação Académica:*
+                      Curso de Atuação:*
                     </label>
                     <select
                       required
@@ -473,7 +609,7 @@ export default function RegisterPage() {
                       required
                       value={teacherId}
                       onChange={(e) => setTeacherId(e.target.value)}
-                      placeholder="Ex: DOC-2026-99"
+                      placeholder="Ex: DC-2024-0326"
                       className="w-full p-2 bg-white border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-hidden focus:border-teal-700"
                     />
                   </div>
@@ -487,7 +623,7 @@ export default function RegisterPage() {
                       required
                       value={specialization}
                       onChange={(e) => setSpecialization(e.target.value)}
-                      placeholder="Ex: Engenharia de Software, Inteligência Artificial, Redes"
+                      placeholder="Ex: Engenharia de Software, Inteligência Artificial, ...."
                       className="w-full p-2 bg-white border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-hidden focus:border-teal-700"
                     />
                   </div>
@@ -528,8 +664,13 @@ export default function RegisterPage() {
         </div>
       </main>
 
-      <footer className="border-t border-slate-200 bg-white py-4 px-4 text-center text-[11px] text-slate-500">
-        © 2026 Portal Académico de TFC • Sistema de Gestão de Workflow de Trabalhos de Fim de Curso
+      <footer className="border-t border-slate-200/80 bg-slate-50 py-6 px-4 text-center space-y-1">
+        <p className="text-xs sm:text-sm font-medium text-slate-600">
+          © 2026 Sistema de Gestão da PAP. Uige
+        </p>
+        <p className="text-[11px] sm:text-xs text-slate-400">
+          Sistema Digital Ativa - Uíge, Angola
+        </p>
       </footer>
     </div>
   );

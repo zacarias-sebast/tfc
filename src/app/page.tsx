@@ -36,12 +36,12 @@ export default function Home() {
     return (
       <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center text-white p-4">
         <div className="w-10 h-10 border-3 border-blue-500 border-t-transparent rounded-full animate-spin mb-4" />
-        <p className="text-sm font-bold text-slate-300">Carregando Portal TFC...</p>
+        <p className="text-sm font-bold text-slate-300">Carregando Portal da PAP...</p>
       </div>
     );
   }
 
-  // 1. VISITANTE NÃO AUTENTICADO: Apresenta Página Inicial Institucional Pública
+  // 1. Inicial Institucional Pública
   if (!currentUser) {
     return (
       <>
@@ -62,21 +62,21 @@ export default function Home() {
     );
   }
 
-  // 2. UTILIZADOR COM CONTA EM ANÁLISE / PENDENTE (RF02)
-  // Estudantes e Orientadores não entram no portal (Sidebar/Menus) até validação da Coordenação
+  // 2. UTILIZADOR COM CONTA EM ANÁLISE / PENDENTE
+ 
   if (currentUser.status === 'pendente') {
     return (
       <div className="min-h-screen bg-slate-50 flex flex-col justify-between font-sans">
-        {/* Topbar Institucional Limpa */}
+        
         <header className="bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between shadow-xs sticky top-0 z-10">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-blue-900 text-white flex items-center justify-center shadow-sm">
               <GraduationCap className="w-5 h-5" />
             </div>
             <div>
-              <h1 className="text-base font-bold text-slate-900 leading-tight">Portal TFC</h1>
+              <h1 className="text-base font-bold text-slate-900 leading-tight">Portal da PAP</h1>
               <p className="text-xs text-slate-500">
-                Workflow Académico Integrado • {currentUser.role === 'orientador' ? (currentUser.department || 'Corpo Docente') : (currentUser.courseName || 'Ensino Superior')}
+                Workflow Académico Integrado • {currentUser.role === 'orientador' ? (currentUser.department || 'Corpo Docente') : (currentUser.courseName || 'Ensino Medio')}
               </p>
             </div>
           </div>
@@ -101,13 +101,13 @@ export default function Home() {
         <main className="flex-1 flex items-center justify-center p-4 sm:p-6">
           <div className="w-full max-w-2xl">
             {currentUser.role === 'estudante' ? (
-              /* Cartão do Estudante preservado 100% intacto */
+              
               <div className="bg-amber-500/10 border border-amber-300 rounded-3xl p-8 text-center shadow-sm">
                 <div className="w-16 h-16 rounded-2xl bg-amber-100 text-amber-600 flex items-center justify-center mx-auto mb-4">
                   <Clock className="w-8 h-8 animate-spin" />
                 </div>
                 <h2 className="text-xl font-bold text-slate-800 mb-2">
-                  Conta em Análise pela Coordenação (RF02)
+                  Conta em Análise pela Coordenação
                 </h2>
                 <p className="text-sm text-slate-600 leading-relaxed mb-6">
                   Olá, <strong className="text-slate-800">{currentUser.name}</strong>! O seu registo no curso de{' '}
@@ -131,23 +131,23 @@ export default function Home() {
                   <div className="p-3 bg-rose-50 border border-rose-200 rounded-2xl text-xs text-rose-800 text-left mt-4 flex items-start gap-2">
                     <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
                     <div>
-                      <strong>Aviso Regulamentar:</strong> A sua conta foi registada com um e-mail individual externo (<code>{currentUser.email}</code>). De acordo com os regulamentos de TFC, contas com e-mails não institucionais não são aceites e permanecerão sempre pendentes até regularização institucional (<code>ipuorientacao@gmail.com</code>).
+                      <strong>Aviso Regulamentar:</strong> A sua conta foi registada com um e-mail individual externo (<code>{currentUser.email}</code>). De acordo com os regulamentos da PAP, contas com e-mails não institucionais não são aceites e permanecerão sempre pendentes até regularização institucional (<code>ipuorientacao@gmail.com</code>).
                     </div>
                   </div>
                 ) : (
                   <p className="text-xs text-amber-700 mt-4 font-medium">
-                    Assim que a sua conta for validada, receberá uma notificação no sistema para iniciar a submissão do Anteprojecto.
+                    Assim que a sua conta for validada, receberá uma notificação no sistema para iniciar a submissão da sua PAP.
                   </p>
                 )}
               </div>
             ) : (
-              /* Cartão do Docente Orientador em harmonia */
+             
               <div className="bg-amber-500/10 border border-amber-300 rounded-3xl p-8 text-center shadow-sm">
                 <div className="w-16 h-16 rounded-2xl bg-amber-100 text-amber-600 flex items-center justify-center mx-auto mb-4">
                   <Clock className="w-8 h-8 animate-spin" />
                 </div>
                 <h2 className="text-xl font-bold text-slate-800 mb-2">
-                  Conta de Orientador em Análise pela Coordenação (RF02)
+                  Conta de Orientador em Análise pela Coordenação
                 </h2>
                 <p className="text-sm text-slate-600 leading-relaxed mb-6">
                   Olá, <strong className="text-slate-800">{currentUser.name}</strong>! O seu registo como Docente Orientador foi submetido com sucesso e está a aguardar validação e homologação pela Coordenação de Curso.
@@ -191,14 +191,19 @@ export default function Home() {
           </div>
         </main>
 
-        <footer className="py-4 text-center text-xs text-slate-400 border-t border-slate-200 bg-white">
-          © 2026 Portal de Trabalhos de Fim de Curso • Regulamento Académico
+        <footer className="border-t border-slate-200/80 bg-slate-50 py-6 px-4 text-center space-y-1">
+          <p className="text-xs sm:text-sm font-medium text-slate-600">
+            © 2026 Sistema de Gestão da PAP. Uige
+          </p>
+          <p className="text-[11px] sm:text-xs text-slate-400">
+            Sistema Digital Ativa - Uíge, Angola
+          </p>
         </footer>
       </div>
     );
   }
 
-  // 3. UTILIZADOR HOMOLOGADO / ATIVO: Acesso Completo ao Portal com Barra Lateral
+  
   const handleOpenChatForGroup = (groupId: string) => {
     setChatGroupId(groupId);
     setCurrentTab('chat');
@@ -210,10 +215,10 @@ export default function Home() {
         return currentUser.role === 'admin'
           ? 'Painel da Administração Geral'
           : currentUser.role === 'coordenador'
-          ? 'Coordenação do Curso'
-          : currentUser.role === 'orientador'
-          ? 'Painel do Orientador'
-          : 'Painel do Estudante';
+            ? 'Coordenação do Curso'
+            : currentUser.role === 'orientador'
+              ? 'Painel do Orientador'
+              : 'Painel do Estudante';
       case 'submeter':
       case 'minhas_submissoes':
         return 'Trabalho de Fim de Curso';
@@ -240,7 +245,7 @@ export default function Home() {
     <div className="min-h-screen bg-slate-50 flex flex-col md:flex-row antialiased">
       {/* Mobile Top Header Toggle */}
       <div className="md:hidden bg-[#0b132b] text-white p-4 flex items-center justify-between border-b border-slate-800">
-        <span className="font-extrabold text-sm tracking-tight">Portal TFC</span>
+        <span className="font-extrabold text-sm tracking-tight">Portal PAP</span>
         <button
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           className="p-1.5 rounded-lg bg-slate-800 text-slate-200"
@@ -268,7 +273,7 @@ export default function Home() {
       <div className="flex-1 flex flex-col min-w-0">
         <Header
           title={getPageTitle()}
-          subtitle="Sistema de Gestão de Workflow Académico para Trabalhos de Fim de Curso"
+          subtitle="Sistema de Gestão de Workflow Académico para Trabalho da PAP"
           onOpenAuthModal={() => {
             setAuthModalTab('login');
             setIsAuthModalOpen(true);
@@ -303,28 +308,36 @@ export default function Home() {
             />
           )}
 
-          {/* ORIENTADOR: MEUS ORIENTANDOS */}
+          
           {currentTab === 'orientandos' && (
             <AdvisorDashboard onOpenChat={handleOpenChatForGroup} />
           )}
 
-          {/* COORDENADOR: GESTÃO TFCS, CONTAS, PRAZOS */}
+        
           {(currentTab === 'gestao_tfcs' || currentTab === 'validar_contas' || currentTab === 'prazos') && (
             <CoordinatorDashboard onNavigateToJuries={() => setCurrentTab('bancas')} />
           )}
 
-          {/* BANCAS DE JÚRI (RF10, RN04) */}
+       
           {currentTab === 'bancas' && <JuryManagement />}
 
-          {/* CHAT EM TEMPO REAL (RF07) */}
+          
           {currentTab === 'chat' && <ChatModule initialGroupId={chatGroupId} />}
 
-          {/* BIBLIOTECA VIRTUAL (RF11) */}
           {currentTab === 'biblioteca' && <VirtualLibrary />}
 
-          {/* ADMIN: CURSOS */}
+      
           {currentTab === 'admin_cursos' && <AdminDashboard />}
         </main>
+
+        <footer className="border-t border-slate-200/80 bg-slate-50 py-6 px-4 text-center space-y-1 mt-auto">
+          <p className="text-xs sm:text-sm font-medium text-slate-600">
+            © 2026 Sistema de Gestão da PAP. Uige
+          </p>
+          <p className="text-[11px] sm:text-xs text-slate-400">
+            Sistema Digital Ativa - Uíge, Angola
+          </p>
+        </footer>
       </div>
 
       {/* Modais Globais */}

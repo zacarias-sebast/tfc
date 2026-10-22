@@ -4,6 +4,8 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import {
   UserProfile,
   UserRole,
+  UserStatus,
+  AcademicLevel,
   Course,
   StudentGroup,
   Submission,
@@ -48,10 +50,11 @@ interface AppContextType {
   switchUser: (userId: string) => void;
   registerUser: (data: Partial<UserProfile> & { password?: string }) => Promise<{ success: boolean; error?: string; user?: UserProfile }>;
   updateUserProfile: (user: UserProfile) => Promise<void>;
-  // User Moderation (RF01, RF02)
+  // User Moderation & Deletion (Admin/Coordenação)
   approveStudent: (userId: string) => void;
   rejectStudent: (userId: string, reason?: string) => void;
   deactivateUser: (userId: string) => void;
+  deleteUser: (userId: string) => Promise<{ success: boolean; error?: string }>;
   // Courses (Admin)
   addCourse: (course: Omit<Course, 'id' | 'createdAt'>) => void;
   assignCourseCoordinator: (courseId: string, coordinatorId: string) => void;
@@ -62,17 +65,24 @@ interface AppContextType {
     teacherId?: string;
     password?: string;
   }) => Promise<{ success: boolean; error?: string; user?: UserProfile }>;
-  // Deadlines (RF05)
+  // Deadlines
   addDeadline: (deadline: Omit<Deadline, 'id'>) => void;
+  deleteDeadline: (deadlineId: string) => void;
   toggleDeadlineBlocked: (deadlineId: string) => void;
-  isSubmissionAllowed: (stage: SubmissionStage, courseId?: string) => { allowed: boolean; reason?: string };
-  // Submissions (RF03, RF09)
+  isSubmissionAllowed: (
+    stage: SubmissionStage,
+    courseId?: string,
+    targetRecipient?: 'coordenacao' | 'orientador'
+  ) => { allowed: boolean; reason?: string };
+  hasActiveCoordinationDeadline: (stage: SubmissionStage, courseId?: string) => boolean;
+  // Submissions
   submitDocument: (params: {
     stage: SubmissionStage;
     title: string;
     theme: string;
     abstract: string;
     file: File;
+    targetRecipient?: 'coordenacao' | 'orientador';
   }) => Promise<{ success: boolean; error?: string }>;
   evaluateSubmission: (params: {
     submissionId: string;
@@ -80,11 +90,11 @@ interface AppContextType {
     status: 'aprovado_orientador' | 'aprovado_coordenador' | 'alteracoes_solicitadas' | 'reprovado';
     feedback: string;
   }) => void;
-  // Advisor Assignment (RF06)
+  // Advisor Assignment
   reassignAdvisor: (groupId: string, newAdvisorId: string) => void;
-  // Chat (RF07)
+  // Chat
   sendMessage: (groupId: string, content: string, fileAttachment?: ChatMessage['fileAttachment']) => void;
-  // Jury & Defense (RF10, RN04)
+  // Jury & Defense
   getJuryRecommendation: (submissionId: string) => ReturnType<typeof recommendJuryPanel>;
   scheduleJury: (data: Omit<JuryDefense, 'id' | 'createdAt'>) => void;
   recordDefenseMinute: (params: {
@@ -93,9 +103,9 @@ interface AppContextType {
     ataNotes: string;
     homologate: boolean;
   }) => void;
-  // Virtual Library (RF11)
+  // Virtual Library
   incrementLibraryDownloads: (itemId: string) => void;
-  // Notifications (RF08)
+  // Notifications
   markNotificationAsRead: (id: string) => void;
   markAllNotificationsAsRead: () => void;
   addNotification: (notif: Omit<SystemNotification, 'id' | 'createdAt' | 'isRead'>) => void;
@@ -166,12 +176,13 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   // Sincronização em Tempo Real com Supabase Auth e Tabela profiles
   useEffect(() => {
-    if (!supabase) return;
+    const client = supabase;
+    if (!client) return;
 
     // 1. Carregar perfis remotos do Supabase
     const fetchRemoteProfiles = async () => {
       try {
-        const { data: dbProfiles, error } = await supabase.from('profiles').select('*');
+        const { data: dbProfiles, error } = await client.from('profiles').select('*');
         if (!error && dbProfiles && dbProfiles.length > 0) {
           const mapped = (dbProfiles as DbProfileRow[]).map(mapDbProfileToUserProfile);
           setUsers((prev) => {
@@ -191,14 +202,14 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     // 2. Carregar cursos reais do Supabase
     const fetchRemoteCourses = async () => {
       try {
-        const { data: dbCourses, error } = await supabase.from('courses').select('*');
+        const { data: dbCourses, error } = await client.from('courses').select('*');
         if (!error && dbCourses && dbCourses.length > 0) {
           const mappedCourses: Course[] = dbCourses.map((c: any) => ({
             id: c.id,
             code: c.code,
             name: c.name,
             department: c.department,
-            terminalLevel: c.terminal_level || '13º Nível (Terminal)',
+            terminalLevel: c.terminal_level || '13º  Classe (Conclusão)',
             description: c.description || '',
             isActive: c.is_active ?? true,
             createdAt: c.created_at || new Date().toISOString()
@@ -212,11 +223,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
     fetchRemoteCourses();
 
-    // 2. Verificar sessão ativa do Supabase Auth
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
+    // 3. Verificar sessão ativa do Supabase Auth
+    client.auth.getSession().then(async ({ data: { session } }) => {
       if (session?.user) {
         try {
-          const { data: profile } = await supabase
+          const { data: profile } = await client
             .from('profiles')
             .select('*')
             .eq('id', session.user.id)
@@ -232,11 +243,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       }
     });
 
-    // 3. Ouvinte de estado de autenticação (Login, Logout, Token renovado)
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+    // 4. Ouvinte de estado de autenticação (Login, Logout, Token renovado)
+    const { data: { subscription } } = client.auth.onAuthStateChange(async (event, session) => {
       if ((event === 'SIGNED_IN' || event === 'USER_UPDATED') && session?.user) {
         try {
-          const { data: profile } = await supabase
+          const { data: profile } = await client
             .from('profiles')
             .select('*')
             .eq('id', session.user.id)
@@ -265,11 +276,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       const storedUsers = localStorage.getItem(`${STORAGE_KEY_PREFIX}users`);
       if (storedUsers) {
         const parsedUsers = JSON.parse(storedUsers) as UserProfile[];
-        // Garante que as contas institucionais oficiais (Admin 1, Admin 2, Coord) existam com ipuorientacao@gmail.com
         const userMap = new Map<string, UserProfile>();
         INITIAL_USERS.forEach((u) => userMap.set(u.id, u));
         parsedUsers.forEach((u) => {
-          // Mantém novos cadastros que não sejam os IDs estáticos oficiais
           if (!userMap.has(u.id)) {
             userMap.set(u.id, u);
           }
@@ -301,7 +310,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       const storedCourses = localStorage.getItem(`${STORAGE_KEY_PREFIX}courses`);
       if (storedCourses) {
         const parsedCourses = JSON.parse(storedCourses) as Course[];
-        // Limpa cursos com ID antigo 'course-1' e migra para os UUIDs oficiais
         if (parsedCourses.some((c) => c.id.startsWith('course-'))) {
           setCourses(INITIAL_COURSES);
         } else {
@@ -363,8 +371,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const login = async (email: string, password?: string): Promise<{ success: boolean; error?: string }> => {
     const cleanEmail = email.trim().toLowerCase();
 
-    // 1. Procura primeiro na base de utilizadores local/sincronizada correspondência exata de e-mail e palavra-passe
-    // Essencial para permitir que Admin 1, Admin 2 e Coordenadores acedam com o email ipuorientacao@gmail.com
+    // 1. Procura primeiro na base local/sincronizada
     const matchedUser = users.find(
       (u) => u.email.toLowerCase() === cleanEmail && (password ? u.password === password : true)
     );
@@ -377,7 +384,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       return { success: true };
     }
 
-    // 2. Autenticação Real com Supabase Auth (se cliente ativo e senha fornecida)
+    // 2. Autenticação Real com Supabase Auth
     if (supabase && password) {
       try {
         const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
@@ -411,7 +418,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       }
     }
 
-    // 3. Verificação de erro amigável se a senha estava incorreta
     const emailMatches = users.some((u) => u.email.toLowerCase() === cleanEmail);
     if (emailMatches) {
       return { success: false, error: 'Palavra-passe incorreta para a conta institucional indicada.' };
@@ -444,7 +450,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       return { success: false, error: 'Preencha todos os campos obrigatórios.' };
     }
 
-    // RN01: Validações para Estudantes
     if (data.role === 'estudante') {
       if (!data.courseId) {
         return { success: false, error: 'É obrigatório selecionar o curso de matrícula.' };
@@ -460,7 +465,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       }
     }
 
-    // RN02: Validações para Orientadores
     if (data.role === 'orientador') {
       if (!data.courseId) {
         return { success: false, error: 'É obrigatório selecionar o curso de atuação do docente orientador.' };
@@ -484,7 +488,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
     const isUuid = (val?: string) => Boolean(val && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(val));
 
-    // Determina UUID válido de curso
     let validCourseId: string | null = null;
     if (isUuid(data.courseId)) {
       validCourseId = data.courseId!;
@@ -493,12 +496,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       if (foundMatch) validCourseId = foundMatch.id;
     }
 
-    // Determina UUID válido de orientador preferencial
     const validAdvisorId: string | null = isUuid(data.preferredAdvisorId) ? data.preferredAdvisorId! : null;
-
     let createdUserId = `usr-${Date.now()}`;
 
-    // Registo Real no Supabase Auth e inserção correspondente na tabela profiles (com timeout de proteção)
     if (supabase && data.password) {
       try {
         const timeoutPromise = new Promise<{ data: any; error: any }>((resolve) =>
@@ -527,15 +527,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         });
 
         const { data: authData, error: authError } = await Promise.race([signUpPromise, timeoutPromise]);
-
         if (authError) {
           console.warn('Supabase auth signUp status:', authError.message);
         }
 
         if (authData?.user?.id) {
           createdUserId = authData.user.id;
-
-          // Assegura criação/atualização no perfil via profiles table
           try {
             await Promise.race([
               supabase.from('profiles').upsert({
@@ -572,7 +569,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       email: data.email,
       password: data.password,
       role: data.role,
-      status: (data.role === 'estudante' || data.role === 'orientador') ? 'pendente' : 'ativo', // Estudantes e Orientadores iniciam como pendente
+      status: (data.role === 'estudante' || data.role === 'orientador') ? 'pendente' : 'ativo',
       phone: data.phone || '',
       courseId: data.courseId,
       courseName: courseObj?.name,
@@ -581,6 +578,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       preferredAdvisorId: data.preferredAdvisorId,
       assignedAdvisorId: advisorObj?.id,
       assignedAdvisorName: advisorObj ? advisorObj.name : 'Aguardando Atribuição pela Coordenação',
+      groupMembers: data.groupMembers,
       teacherId: data.teacherId,
       specialization: data.specialization,
       department: data.department || courseObj?.department || 'Tecnologias',
@@ -590,6 +588,26 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       emailType: isNonInstitutional ? 'externo_nao_aceite' : 'institucional',
       createdAt: new Date().toISOString()
     };
+
+    if (newUser.role === 'estudante') {
+      const newGroup: StudentGroup = {
+        id: `group-${Date.now()}`,
+        name: `Grupo - ${data.name.split(' ')[0]}`,
+        courseId: data.courseId || 'e1a84f3e-2b10-4f9e-8c34-9c5938bf0001',
+        courseName: courseObj?.name || 'Curso',
+        leaderId: createdUserId,
+        leaderName: data.name.trim(),
+        memberIds: [createdUserId],
+        memberNames: [data.name.trim(), ...(data.groupMembers || [])],
+        advisorId: advisorObj?.id,
+        advisorName: advisorObj?.name,
+        academicYear: '2025/2026',
+        createdAt: new Date().toISOString()
+      };
+      newUser.groupId = newGroup.id;
+      newUser.groupName = newGroup.name;
+      setGroups((prev) => [newGroup, ...prev]);
+    }
 
     setUsers((prev) => [newUser, ...prev]);
     setCurrentUser(newUser);
@@ -642,7 +660,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  // RF02: Moderação de Acesso
   const approveStudent = async (userId: string) => {
     setUsers((prev) =>
       prev.map((u) => (u.id === userId ? { ...u, status: 'ativo' as const } : u))
@@ -688,7 +705,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       addNotification({
         userId: targetUser.id,
         title: 'Registo Não Homologado',
-        message: reason || 'A sua inscrição não preencheu os requisitos de matrícula terminal.',
+        message: reason || 'A sua inscrição não preencheu os requisitos de matrícula.',
         type: 'alert'
       });
     }
@@ -708,6 +725,25 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         console.warn('Erro ao desativar no Supabase:', e);
       }
     }
+  };
+
+  const deleteUser = async (userId: string): Promise<{ success: boolean; error?: string }> => {
+    if (currentUser?.id === userId) {
+      setCurrentUser(null);
+      localStorage.removeItem(`${STORAGE_KEY_PREFIX}current_user_id`);
+    }
+
+    setUsers((prev) => prev.filter((u) => u.id !== userId));
+
+    if (supabase) {
+      try {
+        await supabase.from('profiles').delete().eq('id', userId);
+      } catch (e) {
+        console.warn('Erro ao eliminar no Supabase:', e);
+      }
+    }
+
+    return { success: true };
   };
 
   // Admin: Cursos
@@ -769,7 +805,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       createdAt: new Date().toISOString()
     };
 
-    // Sincroniza com Supabase se disponível
     if (supabase) {
       try {
         await supabase.from('profiles').upsert({
@@ -788,11 +823,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       }
     }
 
-    // Adiciona o coordenador à lista de utilizadores e vincula ao curso
     setUsers((prev) => [newCoordinator, ...prev]);
     assignCourseCoordinator(data.courseId, newId);
 
-    // Adiciona notificação no sistema
     addNotification({
       userId: 'usr-admin-1',
       title: 'Coordenador Registado com Sucesso',
@@ -804,7 +837,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     return { success: true, user: newCoordinator };
   };
 
-  // RF05: Controlo de Prazos
+  // Controlo de Prazos
   const addDeadline = (data: Omit<Deadline, 'id'>) => {
     const newDeadline: Deadline = {
       ...data,
@@ -813,65 +846,83 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setDeadlines((prev) => [...prev, newDeadline]);
   };
 
+  const deleteDeadline = (deadlineId: string) => {
+    setDeadlines((prev) => prev.filter((d) => d.id !== deadlineId));
+  };
+
   const toggleDeadlineBlocked = (deadlineId: string) => {
     setDeadlines((prev) =>
       prev.map((d) => (d.id === deadlineId ? { ...d, isBlocked: !d.isBlocked } : d))
     );
   };
 
-  const isSubmissionAllowed = (stage: SubmissionStage, courseId?: string) => {
-    const relevantDeadlines = deadlines.filter(
-      (d) => d.stage === stage && (!courseId || d.courseId === courseId)
-    );
-    if (relevantDeadlines.length === 0) return { allowed: true };
+  const hasActiveCoordinationDeadline = (stage: SubmissionStage, courseId?: string) => {
+    const now = new Date();
+    return deadlines.some((d) => {
+      const matchStage = d.stage === stage;
+      const matchCourse = !courseId || d.courseId === courseId;
+      const isCoord = !d.targetScope || d.targetScope === 'coordenacao';
+      const notBlocked = !d.isBlocked;
+      const notExpired = now <= new Date(d.dueDate);
+      return matchStage && matchCourse && isCoord && notBlocked && notExpired;
+    });
+  };
+
+  const isSubmissionAllowed = (
+    stage: SubmissionStage,
+    courseId?: string,
+    targetRecipient?: 'coordenacao' | 'orientador'
+  ) => {
+    // Submissão ao orientador: SEMPRE aberta
+    if (targetRecipient === 'orientador') {
+      return { allowed: true };
+    }
 
     const now = new Date();
-    for (const d of relevantDeadlines) {
-      if (d.isBlocked) {
-        return { allowed: false, reason: `Submissão bloqueada manualmente pela coordenação: ${d.title}` };
-      }
-      const due = new Date(d.dueDate);
-      if (now > due) {
-        return { allowed: false, reason: `Prazo expirado em ${due.toLocaleDateString('pt-PT')}. Não são aceites envios em atraso (RF05).` };
-      }
+    const coordDeadlines = deadlines.filter(
+      (d) =>
+        d.stage === stage &&
+        (!courseId || d.courseId === courseId) &&
+        (!d.targetScope || d.targetScope === 'coordenacao')
+    );
+
+    if (coordDeadlines.length === 0) {
+      return {
+        allowed: false,
+        reason: 'A Coordenação de Curso ainda não estipulou prazo oficial para esta entrega.'
+      };
     }
+
+    const activeDeadline = coordDeadlines.find((d) => !d.isBlocked && now <= new Date(d.dueDate));
+    if (!activeDeadline) {
+      const blocked = coordDeadlines.find((d) => d.isBlocked);
+      if (blocked) {
+        return { allowed: false, reason: `Submissão bloqueada pela coordenação: ${blocked.title}` };
+      }
+      return {
+        allowed: false,
+        reason: 'Prazo da coordenação encerrado para este período.'
+      };
+    }
+
     return { allowed: true };
   };
 
-  // RF03 & RF09: Submissão e Verificação de Plágio
+  // Submissão e Verificação de Plágio
   const submitDocument = async (params: {
     stage: SubmissionStage;
     title: string;
     theme: string;
     abstract: string;
     file: File;
+    targetRecipient?: 'coordenacao' | 'orientador';
   }): Promise<{ success: boolean; error?: string }> => {
     if (!currentUser) {
       return { success: false, error: 'Sessão necessária. Por favor, inicie sessão para submeter.' };
     }
 
-    // RN03: Formato .docx ou .pdf, max 15MB
-    const validExtensions = ['.pdf', '.docx'];
-    const fileNameLower = params.file.name.toLowerCase();
-    const isValidFormat = validExtensions.some((ext) => fileNameLower.endsWith(ext));
-
-    if (!isValidFormat) {
-      return {
-        success: false,
-        error: 'Formato inválido (RN03). São aceitos estritamente ficheiros com extensão .pdf ou .docx.'
-      };
-    }
-
-    const MAX_SIZE_BYTES = 15 * 1024 * 1024; // 15 MB
-    if (params.file.size > MAX_SIZE_BYTES) {
-      return {
-        success: false,
-        error: `Tamanho excede o limite (RN03). O arquivo possui ${(params.file.size / (1024 * 1024)).toFixed(1)} MB, limite máximo é de 15 MB.`
-      };
-    }
-
-    // RF05: Verificação de Prazos
-    const deadlineCheck = isSubmissionAllowed(params.stage, currentUser.courseId);
+    const recipient = params.targetRecipient || 'orientador';
+    const deadlineCheck = isSubmissionAllowed(params.stage, currentUser.courseId, recipient);
     if (!deadlineCheck.allowed) {
       return {
         success: false,
@@ -879,7 +930,25 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       };
     }
 
-    // RF09: Executa verificação anti-plágio instantânea
+    const validExtensions = ['.pdf', '.docx'];
+    const fileNameLower = params.file.name.toLowerCase();
+    const isValidFormat = validExtensions.some((ext) => fileNameLower.endsWith(ext));
+
+    if (!isValidFormat) {
+      return {
+        success: false,
+        error: 'Formato inválido. São aceitos estritamente ficheiros com extensão .pdf ou .docx.'
+      };
+    }
+
+    const MAX_SIZE_BYTES = 15 * 1024 * 1024;
+    if (params.file.size > MAX_SIZE_BYTES) {
+      return {
+        success: false,
+        error: `Tamanho excede o limite. O arquivo possui ${(params.file.size / (1024 * 1024)).toFixed(1)} MB, limite máximo é de 15 MB.`
+      };
+    }
+
     const plagiarismReport = analyzeDocumentPlagiarism(
       params.file.name,
       params.title,
@@ -890,14 +959,17 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     const userGroup = groups.find((g) => g.id === currentUser.groupId) || {
       id: currentUser.groupId || `group-${currentUser.id}`,
       name: currentUser.groupName || `${currentUser.name} (Individual)`,
-      courseId: currentUser.courseId || 'course-1',
+      courseId: currentUser.courseId || 'e1a84f3e-2b10-4f9e-8c34-9c5938bf0001',
       courseName: currentUser.courseName || 'Engenharia Informática',
       leaderId: currentUser.id,
       leaderName: currentUser.name,
       memberIds: [currentUser.id],
-      memberNames: [currentUser.name],
+      memberNames: currentUser.groupMembers && currentUser.groupMembers.length > 0
+        ? [currentUser.name, ...currentUser.groupMembers]
+        : [currentUser.name],
       advisorId: currentUser.assignedAdvisorId || currentUser.preferredAdvisorId,
       advisorName: currentUser.assignedAdvisorName,
+      academicYear: '2025/2026',
       createdAt: new Date().toISOString()
     };
 
@@ -907,11 +979,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       groupName: userGroup.name,
       studentId: currentUser.id,
       studentName: currentUser.name,
-      courseId: currentUser.courseId || 'course-1',
+      courseId: currentUser.courseId || 'e1a84f3e-2b10-4f9e-8c34-9c5938bf0001',
       courseName: currentUser.courseName || 'Engenharia Informática',
       advisorId: userGroup.advisorId,
       advisorName: userGroup.advisorName,
       stage: params.stage,
+      targetRecipient: recipient,
       title: params.title,
       theme: params.theme,
       abstract: params.abstract,
@@ -930,21 +1003,33 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
     setSubmissions((prev) => [newSubmission, ...prev]);
 
-    // RF08: Notifica o orientador e a coordenação
-    if (userGroup.advisorId) {
+    // Notificações
+    if (recipient === 'orientador' && userGroup.advisorId) {
       addNotification({
         userId: userGroup.advisorId,
-        title: 'Nova Submissão Recebida',
-        message: `O ${userGroup.name} submeteu o ${params.stage === 'anteprojecto' ? 'Anteprojecto' : 'TFC Final'} ("${params.title}").`,
+        title: 'Nova Versão para Revisão Contínua',
+        message: `O ${userGroup.name} submeteu o ${params.stage === 'anteprojecto' ? 'Anteprojecto' : 'TFC'} ("${params.title}") para sua revisão e parecer.`,
         type: 'info',
         link: '/orientador/orientandos'
+      });
+    } else if (recipient === 'coordenacao') {
+      const coords = users.filter(
+        (u) => u.role === 'coordenador' && (!currentUser.courseId || u.courseId === currentUser.courseId)
+      );
+      coords.forEach((c) => {
+        addNotification({
+          userId: c.id,
+          title: 'Nova Submissão Oficial à Coordenação',
+          message: `O ${userGroup.name} submeteu oficialmente o ${params.stage === 'anteprojecto' ? 'Anteprojecto' : 'TFC Final'} para homologação.`,
+          type: 'info',
+          link: '/coordenador/tfcs'
+        });
       });
     }
 
     return { success: true };
   };
 
-  // RF04: Avaliação de Trabalhos
   const evaluateSubmission = (params: {
     submissionId: string;
     evaluatorRole: 'orientador' | 'coordenador';
@@ -969,7 +1054,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           updated.coordinatorEvaluationDate = new Date().toISOString();
         }
 
-        // RF08: Notificação em tempo real para o estudante
         addNotification({
           userId: sub.studentId,
           title: `Trabalho Avaliado (${params.evaluatorRole === 'orientador' ? 'Orientador' : 'Coordenação'})`,
@@ -983,7 +1067,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     );
   };
 
-  // RF06: Atribuição e Reatribuição de Orientador
   const reassignAdvisor = (groupId: string, newAdvisorId: string) => {
     const newAdvisor = users.find((u) => u.id === newAdvisorId);
     if (!newAdvisor) return;
@@ -1006,7 +1089,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
     const group = groups.find((g) => g.id === groupId);
     if (group) {
-      // Notifica o novo orientador
       addNotification({
         userId: newAdvisor.id,
         title: 'Nova Atribuição de Orientação (Coordenação)',
@@ -1015,7 +1097,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         link: '/orientador/orientandos'
       });
 
-      // Notifica o líder do grupo
       addNotification({
         userId: group.leaderId,
         title: 'Orientador Atribuído / Reatribuído',
@@ -1026,7 +1107,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  // RF07: Chat interno em tempo real
   const sendMessage = (
     groupId: string,
     content: string,
@@ -1048,7 +1128,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
     setChatMessages((prev) => [...prev, newMessage]);
 
-    // Resposta automática simulada se o estudante mandar mensagem ao orientador
     if (currentUser.role === 'estudante') {
       const group = groups.find((g) => g.id === groupId);
       if (group?.advisorId) {
@@ -1068,7 +1147,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  // RF10: Gestão de Bancas (Júri)
   const getJuryRecommendation = (submissionId: string) => {
     const sub = submissions.find((s) => s.id === submissionId);
     return recommendJuryPanel(
@@ -1088,7 +1166,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
     setJuries((prev) => [...prev, newJury]);
 
-    // Notifica os envolvidos
     const sub = submissions.find((s) => s.id === data.submissionId);
     if (sub) {
       addNotification({
@@ -1101,7 +1178,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  // RN04: Conclusão de Ciclo e homologação na Biblioteca Virtual
   const recordDefenseMinute = (params: {
     juryId: string;
     finalScore: number;
@@ -1129,9 +1205,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       )
     );
 
-    // Se foi homologada pelo Coordenador (RN04)
     if (params.homologate) {
-      // 1. Atualiza status da submissão para homologado
       setSubmissions((prev) =>
         prev.map((s) =>
           s.id === submission.id
@@ -1140,7 +1214,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         )
       );
 
-      // 2. Transfere automaticamente para a Biblioteca Virtual (RF11)
       const libraryItem: VirtualLibraryItem = {
         id: `lib-${Date.now()}`,
         submissionId: submission.id,
@@ -1162,7 +1235,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
       setVirtualLibrary((prev) => [libraryItem, ...prev]);
 
-      // 3. Notifica o estudante
       addNotification({
         userId: submission.studentId,
         title: 'TFC Homologado e Publicado na Biblioteca Virtual! 🏆',
@@ -1171,7 +1243,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         link: '/biblioteca'
       });
 
-      // Dispara confetes comemorativos
       try {
         confetti({
           particleCount: 120,
@@ -1252,12 +1323,15 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         approveStudent,
         rejectStudent,
         deactivateUser,
+        deleteUser,
         addCourse,
         assignCourseCoordinator,
         registerCoordinator,
         addDeadline,
+        deleteDeadline,
         toggleDeadlineBlocked,
         isSubmissionAllowed,
+        hasActiveCoordinationDeadline,
         submitDocument,
         evaluateSubmission,
         reassignAdvisor,

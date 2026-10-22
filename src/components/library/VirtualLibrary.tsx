@@ -64,7 +64,7 @@ export function VirtualLibrary() {
         <div className="relative z-10 max-w-2xl">
           <div className="inline-flex items-center gap-2 bg-blue-500/20 text-blue-200 px-3 py-1 rounded-full text-xs font-semibold mb-3 border border-blue-400/30">
             <BookOpen className="w-3.5 h-3.5" />
-            <span>Repositório Institucional de TFCs Homologados </span>
+            <span>Repositório Institucional de PAP Homologados </span>
           </div>
           <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight mb-2">
             Biblioteca Virtual Académica
@@ -207,7 +207,7 @@ export function VirtualLibrary() {
       <Modal
         isOpen={Boolean(previewItem)}
         onClose={() => setPreviewItem(null)}
-        title="Ficha Catalográfica do TFC (Biblioteca Virtual)"
+        title="Ficha Catalográfica da PAP (Biblioteca Virtual)"
         subtitle={previewItem?.title}
         maxWidth="max-w-2xl"
       >

@@ -34,6 +34,7 @@ export interface UserProfile {
   preferredAdvisorId?: string;
   assignedAdvisorId?: string;
   assignedAdvisorName?: string;
+  groupMembers?: string[]; // Colleague names in the group
   // Advisor specific
   teacherId?: string;
   specialization?: string[];
@@ -115,6 +116,7 @@ export interface Submission {
   advisorId?: string;
   advisorName?: string;
   stage: SubmissionStage;
+  targetRecipient?: 'coordenacao' | 'orientador'; // whether sent to coordinator or advisor
   title: string;
   theme: string;
   abstract: string;
@@ -144,6 +146,9 @@ export interface Deadline {
   dueDate: string;
   description: string;
   isBlocked: boolean; // if true, submissions are blocked
+  advisorId?: string; // advisor who created the deadline
+  advisorName?: string;
+  targetScope?: 'coordenacao' | 'orientador'; // whether it applies to all course students or only the advisor's advisees
 }
 
 export interface ChatMessage {

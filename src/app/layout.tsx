@@ -14,9 +14,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'Sistema de Gestão de Workflow Académico para Trabalhos de Fim de Curso (TFC)',
+  title: 'Sistema de Gestão de Workflow Académico para Trabalhos de Fim de Curso (PAP)',
   description:
-    'Plataforma web integrada para automatização de submissões, avaliação, moderação de contas, verificação de plágio, bancas de júri e biblioteca virtual.',
+    'Sistema integrado para automatização de submissões, avaliação, moderação de contas, verificação de plágio, bancas de júri e biblioteca virtual.',
 };
 
 export default function RootLayout({

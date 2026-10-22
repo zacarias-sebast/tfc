@@ -60,7 +60,7 @@ export function Header({
               <button
                 onClick={() => setShowNotifications(!showNotifications)}
                 className="relative p-2 text-slate-600 hover:text-blue-900 hover:bg-slate-100 rounded-xl transition-all cursor-pointer"
-                title="Notificações em tempo real (RF08)"
+                title="Notificações em tempo real "
               >
                 <Bell className="w-5 h-5" />
                 {unreadCount > 0 && (

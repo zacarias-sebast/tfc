@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useApp } from '@/context/AppContext';
+
 import {
   GraduationCap,
   Mail,
@@ -19,6 +20,7 @@ import {
 export default function LoginPage() {
   const router = useRouter();
   const { currentUser, login, logout } = useApp();
+  const [imgError, setImgError] = useState(false);
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -26,7 +28,7 @@ export default function LoginPage() {
   const [errorMessage, setErrorMessage] = useState('');
   const [loading, setLoading] = useState(false);
 
-  // Limpa os campos sempre que a página de login é acedida
+  // Limpa os campos 
   useEffect(() => {
     setEmail('');
     setPassword('');
@@ -57,7 +59,7 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col justify-between font-sans selection:bg-blue-900 selection:text-white">
-      {/* Top Header Institucional */}
+      
       <header className="border-b border-slate-200 bg-white shadow-xs px-4 sm:px-8 py-3.5 flex items-center justify-between sticky top-0 z-30">
         <Link
           href="/"
@@ -68,10 +70,10 @@ export default function LoginPage() {
           </div>
           <div>
             <span className="text-base font-extrabold text-slate-900 tracking-tight block leading-tight">
-              PORTAL ACADÉMICO DE TFC
+              PORTAL ACADÉMICO DA PAP
             </span>
             <span className="text-[11px] text-slate-500 font-medium block">
-              Sistema de Gestão de Workflow de Trabalhos de Fim de Curso
+              Sistema de Gestão de Workflow de Trabalhos da PAP
             </span>
           </div>
         </Link>
@@ -85,7 +87,7 @@ export default function LoginPage() {
         </Link>
       </header>
 
-      {/* Main Container */}
+   
       <main className="flex-1 flex items-center justify-center p-4 sm:p-6 lg:p-8">
         <div className="w-full max-w-md space-y-6">
           {/* Card Principal de Autenticação */}
@@ -133,6 +135,7 @@ export default function LoginPage() {
               </div>
             )}
 
+
             {/* Formulário de Login */}
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
@@ -163,7 +166,7 @@ export default function LoginPage() {
                     Palavra-passe:
                   </label>
                   <span className="text-[10px] text-slate-400 font-medium">
-                    Segurança RNF01
+
                   </span>
                 </div>
                 <div className="relative">
@@ -226,8 +229,13 @@ export default function LoginPage() {
       </main>
 
       {/* Rodapé */}
-      <footer className="border-t border-slate-200 bg-white py-4 px-4 text-center text-[11px] text-slate-500">
-        © 2026 Portal Académico de TFC • Sistema de Gestão de Workflow de Trabalhos de Fim de Curso
+      <footer className="border-t border-slate-200/80 bg-slate-50 py-6 px-4 text-center space-y-1">
+        <p className="text-xs sm:text-sm font-medium text-slate-600">
+          © 2026 Sistema de Gestão da PAP. Uige
+        </p>
+        <p className="text-[11px] sm:text-xs text-slate-400">
+          Sistema Digital Ativa - Uíge, Angola
+        </p>
       </footer>
     </div>
   );

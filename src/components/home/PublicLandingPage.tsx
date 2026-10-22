@@ -47,10 +47,10 @@ export function PublicLandingPage({ onOpenAuth }: PublicLandingPageProps) {
             </div>
             <div>
               <span className="text-base font-extrabold text-slate-900 tracking-tight block leading-tight">
-                PORTAL ACADÉMICO DE TFC
+                PORTAL ACADÉMICO DA PAP
               </span>
               <span className="text-[11px] text-slate-500 font-medium block">
-                Sistema de Gestão de Workflow de Trabalhos de Fim de Curso
+                Sistema de Gestão de Workflow de PAP
               </span>
             </div>
           </div>
@@ -111,16 +111,16 @@ export function PublicLandingPage({ onOpenAuth }: PublicLandingPageProps) {
               <div className="max-w-5xl mx-auto text-center space-y-6">
                 <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-500/10 border border-blue-400/30 text-blue-300 text-xs font-semibold">
                   <ShieldCheck className="w-4 h-4 text-blue-400" />
-                  <span>Plataforma Oficial de Gestão e Homologação de TFCs</span>
+                  <span>Plataforma Oficial de Gestão e Homologação de PAP</span>
                 </div>
 
                 <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight text-white max-w-4xl mx-auto leading-tight">
-                  Desmaterialização e Controlo Integral dos Trabalhos de Fim de Curso
+                  Desmaterialização e Controlo Integral dos Trabalhos de Fim de Curso (PAP)
                 </h1>
 
                 <p className="text-slate-300 text-sm sm:text-base max-w-2xl mx-auto leading-relaxed">
                   Sistema centralizado para gestão de candidaturas, acompanhamento de orientações,
-                  submissão de monografias, auditoria de originalidade e publicação no repositório institucional.
+                  submissão de PAP, auditoria de originalidade e publicação no repositório institucional.
                 </p>
 
                 <div className="flex flex-wrap items-center justify-center gap-3 pt-4">
@@ -137,7 +137,7 @@ export function PublicLandingPage({ onOpenAuth }: PublicLandingPageProps) {
                     className="flex items-center gap-2 px-6 py-3 bg-white/10 hover:bg-white/15 text-white rounded-xl text-xs sm:text-sm font-bold border border-white/20 transition-all cursor-pointer"
                   >
                     <BookOpen className="w-4 h-4" />
-                    <span>Consultar Biblioteca de TFCs</span>
+                    <span>Consultar Biblioteca da PAP</span>
                   </button>
                 </div>
               </div>
@@ -327,13 +327,13 @@ export function PublicLandingPage({ onOpenAuth }: PublicLandingPageProps) {
           <section className="max-w-4xl mx-auto px-4 sm:px-8 py-12 space-y-6">
             <div className="bg-white p-8 rounded-3xl border border-slate-200 shadow-xs space-y-6 text-xs sm:text-sm text-slate-700 leading-relaxed">
               <h2 className="text-2xl font-black text-slate-900 border-b border-slate-200 pb-4">
-                Regulamento dos Trabalhos de Fim de Curso (TFC)
+                Regulamento dos Trabalhos de Fim de Curso (PAP)
               </h2>
 
               <div>
                 <h3 className="font-bold text-slate-900 text-sm mb-1">1. Elegibilidade e Matrícula </h3>
                 <p>
-                  O acesso ao fluxo de submissão do TFC é exclusivo para estudantes regularmente matriculados no ano terminal do curso (13º nível / ano final de licenciatura). O estudante deve informar obrigatoriamente o seu curso e indicar um orientador docente preferencial no momento do registo.
+                  O acesso ao fluxo de submissão da PAP é exclusivo para estudantes regularmente matriculados no ano terminal do curso (13ª Classe). O estudante deve informar obrigatoriamente o seu curso e indicar um orientador docente no momento do registo.
                 </p>
               </div>
 
@@ -363,7 +363,7 @@ export function PublicLandingPage({ onOpenAuth }: PublicLandingPageProps) {
                   href="/auth/register"
                   className="px-5 py-2.5 bg-blue-900 text-white rounded-xl font-bold text-xs hover:bg-blue-800 transition-colors cursor-pointer inline-block"
                 >
-                  Registar Inscrição de TFC
+                  Registar Inscrição da PAP
                 </Link>
               </div>
             </div>
@@ -372,19 +372,14 @@ export function PublicLandingPage({ onOpenAuth }: PublicLandingPageProps) {
       </main>
 
       {/* Rodapé Institucional */}
-      <footer className="bg-slate-900 text-slate-400 text-xs border-t border-slate-800 py-10 px-4 sm:px-8">
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left">
-          <div>
-            <span className="font-bold text-slate-200 block">
-              Sistema de Gestão de Workflow Académico para Trabalhos de Fim de Curso (TFC)
-            </span>
-            <span className="text-[11px] text-slate-500">
-              Desenvolvido em Next.js & Supabase • Em conformidade com o Regulamento de Avaliação
-            </span>
-          </div>
-          <div className="text-[11px] text-slate-500">
-            © 2026 Todos os direitos reservados à Instituição de Ensino.
-          </div>
+      <footer className="bg-slate-900 text-slate-400 text-xs border-t border-slate-800 py-8 px-4 sm:px-8 text-center">
+        <div className="max-w-3xl mx-auto flex flex-col items-center justify-center space-y-1 text-center">
+          <p className="text-xs sm:text-sm font-medium text-slate-300">
+            © 2026 Sistema de Gestão da PAP. Uige
+          </p>
+          <p className="text-[11px] sm:text-xs text-slate-400">
+            Sistema Digital Ativa - Uíge, Angola
+          </p>
         </div>
       </footer>
     </div>

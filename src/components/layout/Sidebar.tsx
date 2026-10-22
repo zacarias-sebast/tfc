@@ -121,10 +121,10 @@ export function Sidebar({ currentTab, onTabChange, onOpenAuthModal, onOpenProfil
         </div>
         <div>
           <span className="font-extrabold text-base tracking-tight text-white block">
-            Portal TFC
+            Portal PAP
           </span>
           <span className="text-[10px] text-blue-300 font-medium block">
-            Workflow Académico Integrado
+            Gestão de Workflow de PAP
           </span>
         </div>
       </div>
